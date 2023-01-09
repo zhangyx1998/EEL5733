@@ -1,0 +1,11 @@
+# .gitignore
+# VS Code Settings
+.vscode
+# Syllabus and assignment instructions
+*.pdf
+# Build system
+build
+# Test scripts / inputs / outputs
+test
+# Temporary files
+var
