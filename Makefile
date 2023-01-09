@@ -7,6 +7,8 @@ CFLAGS = -Wall
 debug: CFLAGS += -DDEBUG -g
 # Env related settings
 BUILD_PATH = build
+# Default target
+compose: color_gray bin color_restore
 # Set up C suffixes & relationship between .cpp and .o files
 $(BUILD_PATH):
 	@mkdir -p $(BUILD_PATH)
@@ -19,18 +21,18 @@ $(BUILD_PATH):
 .cpp.o: $(BUILD_PATH)
 	$(CC) $(CFLAGS) -c ./src/$< -I ./inc -o $(BUILD_PATH)/$<.cpp.o
 
+bin: $(BUILD_PATH) $(OBJS)
+	${CC} -o $(BUILD_PATH)/app $(BUILD_PATH)/*.o;
+	@chmod +x $(BUILD_PATH)/app
+
 # Change console output color
 color_gray:
 	@echo "\033[1;30m"
 color_restore:
 	@echo "\033[0m"
 
-run: color_gray fabric color_restore
+run: fabric 
 	@$(BUILD_PATH)/app
-
-fabric: $(BUILD_PATH) $(OBJS)
-	${CC} -o $(BUILD_PATH)/app $(BUILD_PATH)/*.o;
-	@chmod +x $(BUILD_PATH)/app
 
 clean:
 	rm -rf $(BUILD_PATH)
