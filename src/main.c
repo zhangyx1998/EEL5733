@@ -3,7 +3,8 @@
  * @author Yuxuan Zhang (zhangyuxuan@ufl.edu)
  * @brief ====== REPLACE ME ======
  */
-
+#include "main.h"
+#include "macros.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
