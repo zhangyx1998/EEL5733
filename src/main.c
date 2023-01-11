@@ -12,7 +12,7 @@
 
 unsigned int match(char** src, const char* template) {
 #ifdef DEBUG
-	printf("DEBUG MESSAGE: match(\"%s\", \"%s\")\n", *src, template);
+	EPRINT("DEBUG MESSAGE: match(\"%s\", \"%s\")\n", *src, template);
 #endif
 	while (*template != '\0') {
 		if (**src != *template) {
@@ -27,7 +27,7 @@ unsigned int match(char** src, const char* template) {
 
 unsigned int matchChars(char** src, const char* template) {
 #ifdef DEBUG
-	printf("DEBUG MESSAGE: matchChars(\'%c\', \"%s\")\n", **src, template);
+	EPRINT("DEBUG MESSAGE: matchChars(\'%c\', \"%s\")\n", **src, template);
 #endif
 	while (*template != '\0') {
 		if (**src == *template) {
@@ -42,7 +42,7 @@ unsigned int matchChars(char** src, const char* template) {
 
 unsigned int matchDigits(char** src, unsigned int n) {
 #ifdef DEBUG
-	printf("DEBUG MESSAGE: matchDigits(\"%s\", %d)\n", *src, n);
+	EPRINT("DEBUG MESSAGE: matchDigits(\"%s\", %d)\n", *src, n);
 #endif
 	while (n-- > 0) {
 		if (**src < '0' || **src > '9') {
@@ -56,7 +56,7 @@ unsigned int matchDigits(char** src, unsigned int n) {
 
 unsigned int matchContents(char** src, unsigned int n) {
 #ifdef DEBUG
-	printf("DEBUG MESSAGE: matchContents(\"%s\", %d)\n", *src, n);
+	EPRINT("DEBUG MESSAGE: matchContents(\"%s\", %d)\n", *src, n);
 #endif
 	while (n-- > 0) {
 		if (**src == '\0' || **src == ',') {

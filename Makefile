@@ -31,7 +31,7 @@ color_gray:
 color_restore:
 	@echo "\033[0m"
 
-run: fabric 
+run: fabric
 	@$(BUILD_PATH)/app
 
 clean:
