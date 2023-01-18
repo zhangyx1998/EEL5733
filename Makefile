@@ -1,8 +1,10 @@
 # Object list
 OBJS = main.o
-# C++ Compiling Parameters
+# Compiler Parameters
 CC = gcc
-CFLAGS = -Wall -ansi -g
+CFLAGS = -Wall
+# Check for debug flag
+debug: CFLAGS += -DDEBUG -g
 # Env related settings
 BUILD_PATH = build
 # Set up C suffixes & relationship between .cpp and .o files
@@ -33,4 +35,6 @@ fabric: $(BUILD_PATH) $(OBJS)
 clean:
 	rm -rf $(BUILD_PATH)
 
-.PHONY: clean $(BUILD_PATH)
+.PHONY: clean $(BUILD_PATH) test
+
+include ./test/Makefile
