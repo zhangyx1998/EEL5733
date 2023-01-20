@@ -22,8 +22,8 @@ $(BUILD_PATH):
 	cd $(BUILD_PATH); ${CC} -o $@ $(@:.bin=.o) $(OBJS);
 	@chmod +x $(BUILD_PATH)/$@
 
-run:
-	$(BUILD_PATH)/email_filter.bin < test/1.in | $(BUILD_PATH)/calendar_filter.bin
+run: all
+	$(BUILD_PATH)/location_updater.bin < test/1.in
 
 # Change console output color
 color_gray:

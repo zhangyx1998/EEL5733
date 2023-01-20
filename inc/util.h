@@ -5,6 +5,7 @@
 
 #include "stdlib.h"
 #define BUFFER_SIZE 256
+#define LINE_SIZE 28
 
 unsigned int match(char**, const char*);
 unsigned int matchChars(char**, const char*);
