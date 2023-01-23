@@ -34,9 +34,10 @@ color_restore:
 clean:
 	rm -rf $(BUILD_PATH)
 
+# Special target to zip everything for submission
 BRANCH:=$(shell git branch --show-current)
 zip:
-	zip -r $(BRANCH).zip . -x "*.git*" -x "*.DS_Store"
+	zip -r $(BRANCH).zip . -x "*.git*" -x "*.DS_Store" -x "build" -x "test" -x ".vscode"
 
 .PHONY: clean $(BUILD_PATH) test
 
