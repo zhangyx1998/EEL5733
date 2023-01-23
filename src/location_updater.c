@@ -1,3 +1,8 @@
+/**
+ * EEL5733 Assignment 1
+ * @author Yuxuan Zhang (zhangyuxuan@ufl.edu)
+ * @brief Location Updater 
+ */
 #include "macros.h"
 #include "util.h"
 #include "unistd.h"

@@ -1,3 +1,8 @@
+/**
+ * EEL5733 Assignment 1
+ * @author Yuxuan Zhang (zhangyuxuan@ufl.edu)
+ * @brief Email Filter
+ */
 #include "macros.h"
 #include "util.h"
 

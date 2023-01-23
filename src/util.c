@@ -1,7 +1,7 @@
 /**
- * EEL5733 Assignment Project
+ * EEL5733 Assignment 1
  * @author Yuxuan Zhang (zhangyuxuan@ufl.edu)
- * @brief string matching utilities 
+ * @brief String Matching Utilities 
  */
 #include "macros.h"
 #include "stdio.h"

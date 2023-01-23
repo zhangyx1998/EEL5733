@@ -1,3 +1,8 @@
+/**
+ * EEL5733 Assignment 1
+ * @author Yuxuan Zhang (zhangyuxuan@ufl.edu)
+ * @brief Calendar Filter 
+ */
 #include "macros.h"
 #include "string.h"
 #include "util.h"
