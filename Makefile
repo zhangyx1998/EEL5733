@@ -34,6 +34,10 @@ color_restore:
 clean:
 	rm -rf $(BUILD_PATH)
 
+BRANCH:=$(shell git branch --show-current)
+zip:
+	zip -r $(BRANCH).zip . -x "*.git*" -x "*.DS_Store"
+
 .PHONY: clean $(BUILD_PATH) test
 
 # include ./test/Makefile

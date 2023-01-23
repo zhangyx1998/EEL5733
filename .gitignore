@@ -3,6 +3,8 @@
 .vscode
 # Syllabus and assignment instructions
 *.pdf
+# Submission zip files
+*.zip
 # Build system
 build
 # Test scripts / inputs / outputs
