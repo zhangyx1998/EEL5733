@@ -1,7 +1,8 @@
 # Created by Yuxuan Zhang @ University of Florida
-
 # VS Code Settings
 .vscode
+# MacOS Finder Cache
+.DS_Store
 # Syllabus and assignment instructions
 *.pdf
 # Submission zip files
@@ -9,6 +10,7 @@
 # Build system
 build
 # Test scripts / inputs / outputs
-test
+test/*.out
+test/*.diff
 # Temporary files
 var

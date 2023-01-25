@@ -1,15 +1,16 @@
 # Created by Yuxuan Zhang,
 # University of Florida
-
-# Object list
-OBJS = util.o
 # Compiler Parameters
-CC = gcc
-CFLAGS = -Wall
+CC      = gcc
+CFLAGS  = -Wall
+# Target list
+TARGETS = email_filter calendar_filter location_updater
+# Object list
+OBJS    = util.o
 # Env related settings
 BUILD_PATH = build
 # Default target
-all: $(BUILD_PATH) color_gray email_filter.bin calendar_filter.bin location_updater.bin color_restore
+all: $(BUILD_PATH) color_gray $(foreach t,$(TARGETS),$t.bin) color_restore
 # Check for debug flag
 debug: CFLAGS += -DDEBUG -g
 debug: all
@@ -25,9 +26,6 @@ $(BUILD_PATH):
 	cd $(BUILD_PATH); ${CC} -o $@ $(@:.bin=.o) $(OBJS);
 	@chmod +x $(BUILD_PATH)/$@
 
-run: all
-	$(BUILD_PATH)/location_updater.bin < test/1.in
-
 # Change console output color
 color_gray:
 	@echo "\033[1;30m"
@@ -40,8 +38,8 @@ clean:
 # Special target to zip everything for submission
 BRANCH:=$(shell git branch --show-current)
 zip:
-	zip -r $(BRANCH).zip . -x "*.git*" -x "*.DS_Store" -x "build" -x "test" -x ".vscode"
+	zip -r $(BRANCH).zip . -X .* build test
 
 .PHONY: clean $(BUILD_PATH) test
 
-# include ./test/Makefile
+include ./test/Makefile
