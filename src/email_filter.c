@@ -13,6 +13,10 @@ int main(int argc, const char *argv[]) {
 	// Subject: C,Meeting   ,01/12/2019,15:30,NEB202
 	// Subject: X,Meeting   ,01/12/2019,15:30,NEB202
 	while (getline(&buf, &len, stdin) >= 0) {
+		// Debug mode prints raw input
+#ifdef DEBUG
+		EPRINT(">> Input >> %s", buf);
+#endif
 		// Avoid unwanted changes to line buffers
 		char *ptr = buf;
 		// Remove tailing line feed

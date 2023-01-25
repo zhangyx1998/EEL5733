@@ -6,7 +6,7 @@ CFLAGS  = -Wall
 # Target list
 TARGETS = email_filter calendar_filter location_updater
 # Object list
-OBJS    = util.o
+OBJS    = util.o list.o
 # Env related settings
 BUILD_PATH = build
 # Default target
