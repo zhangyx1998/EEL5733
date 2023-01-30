@@ -5,8 +5,11 @@
 .DS_Store
 # Syllabus and assignment instructions
 *.pdf
-# Submission zip files
+# Archives for submission
 *.zip
+*.tar.gz
+*.tar
+*.tgz
 # Build system
 build
 # Test scripts / inputs / outputs
@@ -14,3 +17,4 @@ test/*.out
 test/*.diff
 # Temporary files
 var
+tmp
