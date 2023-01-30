@@ -35,30 +35,16 @@ color_restore:
 	@echo "\033[0m"
 
 clean:
-	rm -rf $(BUILD_PATH) var tmp
+	rm -rf $(BUILD_PATH)
 
 # Special target to zip everything for submission
 BRANCH:=$(shell BR=$$(git branch --show-current); echo $$(tr '[:lower:]' '[:upper:]' <<< $${BR:0:1})$${BR:1})
 FILE_LIST:=$(shell git ls-tree --full-tree --name-only -r HEAD)
-TAR_DIR:=tmp/$(USER)_$(BRANCH)
+ARCHIVE:=$(USER)_$(BRANCH)
 
-tar:
-	@mkdir -p $(TAR_DIR) var
-
-	@for f in $(FILE_LIST); \
-	do \
-		mkdir -p $(TAR_DIR)/$$(dirname $$f); \
-		cp $$f $(TAR_DIR)/$$f; \
-	done;
-
-	@tar -czvf \
-		var/$(USER)_$(BRANCH).tar.gz \
-		-C $(shell dirname $(TAR_DIR)) \
-		$(shell basename $(TAR_DIR))
-
-	@rm -rf $(TAR_DIR)
-
-	@tar -tf var/$(USER)_$(BRANCH).tar.gz
+zip:
+	mkdir -p var
+	@zip var/$(ARCHIVE).zip $(FILE_LIST)
 
 .PHONY: clean $(BUILD_PATH) test
 
