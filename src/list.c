@@ -91,7 +91,7 @@ int list_create(struct Node *node) {
 	for (
 		struct Node * p = list;
 		p != NULL;
-		(prev = p) && (p = p->next) && (index++)
+		prev = p, p = p->next, index++
 	) {
 		// Termination condition: found event later than current
 		if (comp(node, p) <= 0) {
@@ -129,7 +129,7 @@ int list_delete(struct Node *node) {
 	for (
 		struct Node *p = list;
 		p != NULL;
-		(prev = p) && (p = p->next) && (index++)
+		prev = p, p = p->next, index++
 	) {
 		// Termination condition: found event with given name
 		if (memcmp(p, node, sizeof(struct Node) - sizeof(void *)) == 0) {
@@ -171,7 +171,7 @@ int list_modify(struct Node *node) {
 	for (
 		struct Node * p = list;
 		p != NULL;
-		(prev = p) && (p = p->next) && (index++)
+		prev = p, p = p->next, index++
 	) {
 		// Termination condition: found event with given name
 		if (memcmp(p->name, node->name, 10) == 0) {
