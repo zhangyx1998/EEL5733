@@ -1,44 +1,49 @@
 # Created by Yuxuan Zhang,
 # University of Florida
 # SHELL := /bin/bash
-USER  := Yuxuan_Zhang
+USER	?= Yuxuan_Zhang
 # Env related settings
-BUILD = build
+BUILD	?= build
 # Compiler Parameters
-CC      = gcc
-CFLAGS  = -Wall
+CC		?= gcc
+CFLAGS	?= -Wall
 # Object list
 SRCS     = $(wildcard src/*.c)
 INCS     = $(wildcard inc/*.h)
-OBJS     = $(patsubst src/%.c,$(BUILD)/%.o,$(SRCS))
 LIB_INCS = $(wildcard lib/*.h)
 LIB_SRCS = $(wildcard lib/*.c)
-LIB_OBJS = $(patsubst %.c,$(BUILD)/%.o,$(LIB_SRCS))
-TARGETS  = $(patsubst src/%.c,%.bin,$(SRCS))
+# ESCAPE Codes
+BOLD = $(shell tput bold)
+SMUL = $(shell tput smul)
+RMUL = $(shell tput rmul)
+SMSO = $(shell tput smso)
+RMSO = $(shell tput rmso)
+RESET = $(shell tput sgr0)
 # Default target
-all: color_gray $(TARGETS) color_restore
+all: $(patsubst src/%.c,$(BUILD)/%,$(SRCS))
 # Check for debug flag
-debug: CFLAGS += -DDEBUG -g
-debug: all
+debug:
+	$(eval CFLAGS=$(CFLAGS) -DDEBUG -g)
+	$(eval BUILD=$(BUILD)/debug)
+	BUILD="$(BUILD)" CFLAGS="$(CFLAGS)" make all
 # Set up C suffixes & relationship between .cpp and .o files
 $(BUILD)/src/%.o: src/%.c $(INCS) $(LIB_INCS)
 	@mkdir -p $(shell dirname $@)
-	$(CC) $(CFLAGS) -c -I./inc -I./lib -o $@ $<
+	@$(CC) $(CFLAGS) -c -I./inc -I./lib -o $@ $<
+	@printf "$(BOLD)$$(tput setaf 6)$(notdir $@)$(RESET)"
+	@echo "$$(tput setaf 6) ← $?$(RESET)"
 
 $(BUILD)/lib/%.o: lib/%.c $(LIB_INCS)
 	@mkdir -p $(shell dirname $@)
-	$(CC) $(CFLAGS) -c -I./lib -o $@ $<
+	@$(CC) $(CFLAGS) -c -I./lib -o $@ $<
+	@printf "$(BOLD)$$(tput setaf 6)$(notdir $@)$(RESET)"
+	@echo "$$(tput setaf 6) ← $?$(RESET)"
 
-%.bin: $(BUILD)/src/%.o $(LIB_OBJS)
-	@$(eval EXEC=$(BUILD)/$(@:.bin=))
-	${CC} -o $(EXEC) $(BUILD)/src/$(@:.bin=.o) $(LIB_OBJS);
-	@chmod +x $(EXEC)
-
-# Change console output color
-color_gray:
-	@echo "\033[1;30m"
-color_restore:
-	@echo "\033[0m"
+$(BUILD)/%: $(BUILD)/src/%.o $(patsubst %.c,$(BUILD)/%.o,$(LIB_SRCS))
+	@${CC} -o $@ $?;
+	@chmod +x $@
+	@printf "$(BOLD)$$(tput setaf 4)$(notdir $@)$(RESET)"
+	@echo "$$(tput setaf 4) ← $?$(RESET)"
 
 clean:
 	rm -rf $(BUILD)
@@ -52,6 +57,8 @@ zip:
 	mkdir -p var
 	@zip var/$(ARCHIVE).zip $(FILE_LIST)
 
-.PHONY: clean $(BUILD) test
+.PHONY: all debug color_blue color_restore %.bin clean test
+
+.PRECIOUS: $(BUILD)/lib/%.o $(BUILD)/src/%.o
 
 include ./test/Makefile
