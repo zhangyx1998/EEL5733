@@ -1,5 +1,5 @@
 /**
- * EEL5733 Assignment 1
+ * EEL5733 Assignment 2
  * @author Yuxuan Zhang (zhangyuxuan@ufl.edu)
  * @brief List operations
  */
@@ -51,10 +51,12 @@ int comp(struct Node *a, struct Node *b) {
 	else return comp_time(a, b);
 }
 
-void print_node(struct Node * node, unsigned int valid) {
+void print_node(struct Node * node, unsigned int valid, const struct IO * const io) {
+	char * sbuf = NULL;
 	if (valid) {
-		printf(
-			"%02d/%02d/%04d,%02d:%02d,%.10s\n",
+		MALLOC_PRINTF(
+			sbuf,
+			"%02d/%02d/%04d,%02d:%02d,%.10s",
 			node->date.month,
 			node->date.day,
 			node->date.year,
@@ -63,28 +65,31 @@ void print_node(struct Node * node, unsigned int valid) {
 			node->loc
 		);
 	} else {
-		printf(
-			"%02d/%02d/%04d,--:--,NA\n",
+		MALLOC_PRINTF(
+			sbuf,
+			"%02d/%02d/%04d,--:--,NA",
 			node->date.month,
 			node->date.day,
 			node->date.year
 		);
 	}
+	(*io->puts)(sbuf);
+	if (sbuf != NULL) free(sbuf);
 }
 
-#define CHECK_PRINT(P, N)							\
-	if (P == NULL && N != NULL) print_node(N, 1);	\
-	else if (N != NULL && comp_date(P, N) < 0) {	\
-		print_node(N, 1);							\
+#define CHECK_PRINT(P, N, IO)								\
+	if (P == NULL && N != NULL) print_node(N, 1, IO);	\
+	else if (N != NULL && comp_date(P, N) < 0) {		\
+		print_node(N, 1, IO);							\
 	}
 
-int list_create(struct Node *node) {
+int list_create(struct Node *node, const struct IO * const io) {
 	struct Node *prev = NULL;
 	unsigned int index = 0;
 	if (list == NULL) {
 		// Initialize list
 		list = node;
-		print_node(node, 1);
+		print_node(node, 1, io);
 		return index;
 	}
 	// List Search: find insertion point
@@ -106,18 +111,18 @@ int list_create(struct Node *node) {
 				prev->next = node;
 			}
 			// Print updated event information
-			CHECK_PRINT(prev, node);
+			CHECK_PRINT(prev, node, io);
 			return index;
 		}
 	}
 	// If control reaches this point, no event later than the
 	// current node was scheduled.
 	prev->next = node;
-	if (comp_date(prev, node)) print_node(node, 1);
+	if (comp_date(prev, node)) print_node(node, 1, io);
 	return ++index;
 }
 
-int list_delete(struct Node *node) {
+int list_delete(struct Node *node, const struct IO * const io) {
 	struct Node *prev = NULL;
 	unsigned int index = 0;
 	if (list == NULL) {
@@ -141,9 +146,9 @@ int list_delete(struct Node *node) {
 				// Deleted node is the leading node of the same day
 				if (comp_date(node, p->next) < 0) {
 					// No other same-day event registered
-					print_node(p, 0);
+					print_node(p, 0, io);
 				} else {
-					print_node(p->next, 1);
+					print_node(p->next, 1, io);
 				}
 			}
 			return index;
@@ -154,12 +159,15 @@ int list_delete(struct Node *node) {
 	}
 	// If control reaches this point, no event with the exact
 	// same name as the given one can be found.
-	EPRINT("Error: unable to find event with name \"%.10s\"", node->name);
-	if (comp_date(prev, node)) print_node(node, 1);
+	EPRINT(
+		"Error: unable to find event with name \"%.10s\"",
+		node->name
+	);
+	if (comp_date(prev, node)) print_node(node, 1, io);
 	return ++index;
 }
 
-int list_modify(struct Node *node) {
+int list_modify(struct Node *node, const struct IO * const io) {
 	struct Node *prev = NULL;
 	unsigned int index = 0;
 	if (list == NULL) {
@@ -182,15 +190,15 @@ int list_modify(struct Node *node) {
 				if (prev != NULL) prev->next = node;
 				else list = node;
 				node->next = p->next;
-				CHECK_PRINT(prev, node);
+				CHECK_PRINT(prev, node, io);
 			} else {
 				// Remove current node
 				if (prev != NULL) prev->next = p->next;
 				else list = p->next;
-				CHECK_PRINT(prev, p->next);
+				CHECK_PRINT(prev, p->next, io);
 				free(p);
 				// Re-scan the list to insert modified node
-				list_create(node);
+				list_create(node, io);
 			}
 			return index;
 		}
@@ -198,6 +206,6 @@ int list_modify(struct Node *node) {
 	// If control reaches this point, no event with the exact
 	// same name as the given one can be found.
 	EPRINT("Error: unable to find event with name \"%.10s\"", node->name);
-	if (comp_date(prev, node)) print_node(node, 1);
+	if (comp_date(prev, node)) print_node(node, 1, io);
 	return ++index;
 }

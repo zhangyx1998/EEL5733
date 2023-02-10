@@ -1,5 +1,5 @@
 /**
- * EEL5733 Assignment 1
+ * EEL5733 Assignment 2
  * @author Yuxuan Zhang (zhangyuxuan@ufl.edu)
  * @brief String Matching Utilities 
  */
@@ -7,10 +7,11 @@
 #include "stdio.h"
 #include "stdlib.h"
 
+ssize_t stdin_getline(char **buf, size_t *len) {
+	return getline(buf, len, stdin);
+}
+
 unsigned int match(char** src, const char* template) {
-#ifdef DEBUG
-	EPRINT("DEBUG MESSAGE: match(\"%s\", \"%s\")\n", *src, template);
-#endif
 	while (*template != '\0') {
 		if (**src != *template) {
 			(*src) ++;
@@ -23,9 +24,6 @@ unsigned int match(char** src, const char* template) {
 }
 
 unsigned int matchChars(char** src, const char* template) {
-#ifdef DEBUG
-	EPRINT("DEBUG MESSAGE: matchChars(\'%c\', \"%s\")\n", **src, template);
-#endif
 	while (*template != '\0') {
 		if (**src == *template) {
 			(*src) ++;
@@ -38,9 +36,6 @@ unsigned int matchChars(char** src, const char* template) {
 }
 
 unsigned int matchDigits(char** src, unsigned int n) {
-#ifdef DEBUG
-	EPRINT("DEBUG MESSAGE: matchDigits(\"%s\", %d)\n", *src, n);
-#endif
 	while (n-- > 0) {
 		if (**src < '0' || **src > '9') {
 			(*src) ++;
@@ -52,9 +47,6 @@ unsigned int matchDigits(char** src, unsigned int n) {
 }
 
 unsigned int matchContents(char** src, unsigned int n) {
-#ifdef DEBUG
-	EPRINT("DEBUG MESSAGE: matchContents(\"%s\", %d)\n", *src, n);
-#endif
 	while (n-- > 0) {
 		if (**src == '\0' || **src == ',') {
 			(*src) ++;

@@ -2,31 +2,37 @@
 # University of Florida
 # SHELL := /bin/bash
 USER  := Yuxuan_Zhang
+# Env related settings
+BUILD = build
 # Compiler Parameters
 CC      = gcc
 CFLAGS  = -Wall
-# Target list
-TARGETS = email_filter calendar_filter location_updater
 # Object list
-OBJS    = util.o list.o
-# Env related settings
-BUILD_PATH = build
+SRCS     = $(wildcard src/*.c)
+INCS     = $(wildcard inc/*.h)
+OBJS     = $(patsubst src/%.c,$(BUILD)/%.o,$(SRCS))
+LIB_INCS = $(wildcard lib/*.h)
+LIB_SRCS = $(wildcard lib/*.c)
+LIB_OBJS = $(patsubst %.c,$(BUILD)/%.o,$(LIB_SRCS))
+TARGETS  = $(patsubst src/%.c,%.bin,$(SRCS))
 # Default target
-all: $(BUILD_PATH) color_gray $(foreach t,$(TARGETS),$t.bin) color_restore
+all: color_gray $(TARGETS) color_restore
 # Check for debug flag
 debug: CFLAGS += -DDEBUG -g
 debug: all
 # Set up C suffixes & relationship between .cpp and .o files
-$(BUILD_PATH):
-	@mkdir -p $(BUILD_PATH)
+$(BUILD)/src/%.o: src/%.c $(INCS) $(LIB_INCS)
+	@mkdir -p $(shell dirname $@)
+	$(CC) $(CFLAGS) -c -I./inc -I./lib -o $@ $<
 
-%.o: src/%.c
-	$(CC) $(CFLAGS) -c -I./inc -o $(BUILD_PATH)/$@ $<
+$(BUILD)/lib/%.o: lib/%.c $(LIB_INCS)
+	@mkdir -p $(shell dirname $@)
+	$(CC) $(CFLAGS) -c -I./lib -o $@ $<
 
-%.bin: $(OBJS) %.o
-	@echo $@
-	cd $(BUILD_PATH); ${CC} -o $@ $(@:.bin=.o) $(OBJS);
-	@chmod +x $(BUILD_PATH)/$@
+%.bin: $(BUILD)/src/%.o $(LIB_OBJS)
+	@$(eval EXEC=$(BUILD)/$(@:.bin=))
+	${CC} -o $(EXEC) $(BUILD)/src/$(@:.bin=.o) $(LIB_OBJS);
+	@chmod +x $(EXEC)
 
 # Change console output color
 color_gray:
@@ -35,7 +41,7 @@ color_restore:
 	@echo "\033[0m"
 
 clean:
-	rm -rf $(BUILD_PATH)
+	rm -rf $(BUILD)
 
 # Special target to zip everything for submission
 BRANCH:=$(shell BR=$$(git branch --show-current); echo $$(tr '[:lower:]' '[:upper:]' <<< $${BR:0:1})$${BR:1})
@@ -46,6 +52,6 @@ zip:
 	mkdir -p var
 	@zip var/$(ARCHIVE).zip $(FILE_LIST)
 
-.PHONY: clean $(BUILD_PATH) test
+.PHONY: clean $(BUILD) test
 
 include ./test/Makefile
