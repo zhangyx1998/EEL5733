@@ -12,7 +12,7 @@
 #include "queue.h"
 
 // Shared ring-buffer
-Queue *queue;
+void *queue;
 struct LockModel {
 	pthread_mutex_t lock;
 	pthread_cond_t consumer, producer;
@@ -24,10 +24,10 @@ struct LockModel {
 
 int thread_putchar(const char c) {
 	pthread_mutex_lock(&model.lock);
-	while (queue_len(queue) >= queue->size)
+	while (queue_full(queue))
 		pthread_cond_wait(&model.producer, &model.lock);
 	// Insert into buffer
-	enqueue(queue, c);
+	enqueue(queue, (QueueElement)c);
 	// Debug log
 	DEBUG_PRINT(
 		isprint(c)
@@ -58,7 +58,7 @@ int thread_puts(const char *str) {
 
 const char thread_getchar() {
 	pthread_mutex_lock(&model.lock);
-	while (queue_len(queue) == 0)
+	while (queue_empty(queue))
 		pthread_cond_wait(&model.consumer, &model.lock);
 	// Pop from buffer
 	const char c = dequeue(queue);

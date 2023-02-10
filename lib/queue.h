@@ -8,21 +8,17 @@
 
 #include "stdlib.h"
 
-struct Queue {
-	char *buffer;
-	size_t size;
-	char *start, *end;
-	unsigned short flag_empty;
-};
+typedef void * QueueElement;
 
-typedef struct Queue Queue;
+// Dynamically create queue with given capacity
+void *create_queue(size_t);
+void free_queue(void * const);
 
-Queue *create_queue(size_t size);
-void free_queue(Queue * const);
+size_t queue_len(void * const);
+unsigned short queue_empty(void * const);
+unsigned short queue_full(void * const);
 
-size_t queue_len(Queue * const);
-
-void enqueue(Queue * const, const char);
-char dequeue(Queue * const);
+void enqueue(void * const, const QueueElement);
+QueueElement dequeue(void * const);
 
 #endif
