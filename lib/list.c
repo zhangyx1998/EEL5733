@@ -73,7 +73,7 @@ void print_node(struct Node * node, unsigned int valid, const struct IO * const 
 			node->date.year
 		);
 	}
-	(*io->puts)(sbuf);
+	io->puts(sbuf);
 	if (sbuf != NULL) free(sbuf);
 }
 

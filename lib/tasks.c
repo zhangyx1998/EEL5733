@@ -14,7 +14,7 @@ void email_filter(const struct IO * const io) {
 	// Samples:
 	// Subject: C,Meeting   ,01/12/2019,15:30,NEB202
 	// Subject: X,Meeting   ,01/12/2019,15:30,NEB202
-	while ((*io->getline)(&buf, &len) >= 0) {
+	while (io->getline(&buf, &len) >= 0) {
 		// Avoid unwanted changes to line buffers
 		char *ptr = buf;
 		// Remove tailing line feed
@@ -48,7 +48,7 @@ void email_filter(const struct IO * const io) {
 			(*ptr == 0 || *ptr == '\n')			&&
 			// Set line end to 0
 			((*ptr = 0) == 0)
-		) (*io->puts)(&buf[9]);
+		) io->puts(&buf[9]);
 	}
 }
 
@@ -58,7 +58,7 @@ void calendar_filter(const struct IO * const io) {
 	// Samples:
 	// C,Meeting   ,01/12/2019,15:30,NEB202
 	// X,Meeting   ,01/12/2019,15:30,NEB202
-	while ((*io->getline)(&buf, &len) >= 0) {
+	while (io->getline(&buf, &len) >= 0) {
 		// Avoid unwanted changes to line buffers
 		char *ptr = buf;
 		// Remove tailing line feed
