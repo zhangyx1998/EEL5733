@@ -1,7 +1,7 @@
 # Created by Yuxuan Zhang,
 # University of Florida
 # SHELL := /bin/bash
-USER	?= Yuxuan_Zhang
+AUTHOR	?= Yuxuan_Zhang
 # Env related settings
 BUILD	?= build
 # Compiler Parameters
@@ -26,16 +26,16 @@ debug:
 	$(eval CFLAGS=$(CFLAGS) -DDEBUG -g)
 	$(eval BUILD=$(BUILD)/debug)
 	BUILD="$(BUILD)" CFLAGS="$(CFLAGS)" make all
-# Set up C suffixes & relationship between .cpp and .o files
+
 $(BUILD)/src/%.o: src/%.c $(INCS) $(LIB_INCS)
 	@mkdir -p $(shell dirname $@)
-	@$(CC) $(CFLAGS) -c -I./inc -I./lib -o $@ $<
+	@$(CC) $(CFLAGS) -c -fPIC -I./inc -I./lib -o $@ $<
 	@printf "$(BOLD)$$(tput setaf 6)$(notdir $@)$(RESET)"
 	@echo "$$(tput setaf 6) ← $?$(RESET)"
 
 $(BUILD)/lib/%.o: lib/%.c $(LIB_INCS)
 	@mkdir -p $(shell dirname $@)
-	@$(CC) $(CFLAGS) -c -I./lib -o $@ $<
+	@$(CC) $(CFLAGS) -c -fPIC -I./lib -o $@ $<
 	@printf "$(BOLD)$$(tput setaf 6)$(notdir $@)$(RESET)"
 	@echo "$$(tput setaf 6) ← $?$(RESET)"
 
@@ -51,7 +51,7 @@ clean:
 # Special target to zip everything for submission
 BRANCH:=$(shell BR=$$(git branch --show-current); echo $$(tr '[:lower:]' '[:upper:]' <<< $${BR:0:1})$${BR:1})
 FILE_LIST:=$(shell git ls-tree --full-tree --name-only -r HEAD)
-ARCHIVE:=$(USER)_$(BRANCH)
+ARCHIVE:=$(AUTHOR)_$(BRANCH)
 
 zip:
 	mkdir -p var

@@ -2,7 +2,7 @@
 #include "queue.h"
 
 struct Queue {
-	QueueElement **buffer, **start, **end;
+	QueueElement *buffer, *start, *end;
 	size_t capacity;
 	unsigned short empty;
 };
@@ -10,8 +10,7 @@ struct Queue {
 typedef struct Queue Queue;
 
 void *create_queue(size_t capacity) {
-	if (capacity == 0)
-		ERR_EXIT("Queue::create: initializing queue with length of 0\n");
+	ASSERT(capacity > 0, "initializing queue with length of 0");
 	Queue * const q = malloc(sizeof(Queue));
 	q->buffer = malloc(capacity * sizeof(*q->buffer));
 	q->capacity = capacity;
@@ -54,14 +53,14 @@ unsigned short queue_full(void * const queue) {
 
 void enqueue(void * const queue, const QueueElement c) {
 	Queue * const q = queue;
-	*q->end = c;
+	*(q->end) = c;
 	MOVE_NEXT(q, q->end);
 	q->empty = 0;
 }
 
 QueueElement dequeue(void * const queue) {
 	Queue * const q = queue;
-	const QueueElement c = *q->start;
+	const QueueElement c = *(q->start);
 	MOVE_NEXT(q, q->start);
 	if (q->start == q->end)
 		q->empty = 1;

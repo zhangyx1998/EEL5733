@@ -127,7 +127,7 @@ int list_delete(struct Node *node, const struct IO * const io) {
 	unsigned int index = 0;
 	if (list == NULL) {
 		// Trying to modify an empty list
-		EPRINT("Error: trying to delete from an empty list\n");
+		EPRINT("trying to delete from an empty list");
 		return -1;
 	}
 	// List Search: find node to be deleted
@@ -159,10 +159,7 @@ int list_delete(struct Node *node, const struct IO * const io) {
 	}
 	// If control reaches this point, no event with the exact
 	// same name as the given one can be found.
-	EPRINT(
-		"Error: unable to find event with name \"%.10s\"",
-		node->name
-	);
+	ASSERT(0, "unable to find event with name \"%.10s\"", node->name);
 	if (comp_date(prev, node)) print_node(node, 1, io);
 	return ++index;
 }
@@ -170,11 +167,7 @@ int list_delete(struct Node *node, const struct IO * const io) {
 int list_modify(struct Node *node, const struct IO * const io) {
 	struct Node *prev = NULL;
 	unsigned int index = 0;
-	if (list == NULL) {
-		// Trying to modify an empty list
-		EPRINT("Error: trying to modify an empty list\n");
-		return -1;
-	}
+	ASSERT(list != NULL, "trying to modify an empty list");
 	// List Search: find replacement node
 	for (
 		struct Node * p = list;

@@ -8,7 +8,7 @@
 
 #include "stdlib.h"
 
-typedef void * QueueElement;
+typedef char QueueElement;
 
 // Dynamically create queue with given capacity
 void *create_queue(size_t);
