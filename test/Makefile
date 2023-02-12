@@ -1,16 +1,27 @@
-test: $(patsubst test/%.in,%.test,$(wildcard test/*.in))
+test: $(patsubst %.in,%,$(wildcard test/*.in))
 
-%.test:
-	$(eval FILE:=$(shell echo "$@" | sed -E 's/\.test$$//g'))
-	$(eval EXEC:=$(BUILD)/$(shell sed -E 's/\.[0-9]+$$//g' <<< $(FILE)))
-	@if [ ! -f $(EXEC) ]; then \
-		BUILD="$(BUILD)" \
-		CFLAGS="$(CFLAGS)" \
-		make $(EXEC); \
+test/%.tmp: test/%.in
+	$(eval								\
+		EXEC=$(BUILD)/$(shell			\
+			echo $(notdir $(@:.tmp=)) |	\
+			sed -E 's/\.[0-9]+$$//g'	\
+		)								\
+	)
+	@if [ ! -f $(EXEC) ]; then	\
+		BUILD="$(BUILD)"		\
+		CFLAGS="$(CFLAGS)"		\
+		make $(EXEC);			\
 	fi
-	@$(EXEC) < test/$(FILE).in 1> test/$(FILE).out
-	@diff test/$(FILE).ref test/$(FILE).out > test/$(FILE).diff \
-	&& echo "\033[1;32m [PASSING] \033[1;0m\033[1;2m$(FILE).test\033[0m" \
-	|| echo "\033[1;31m [FAILING] \033[1;0m\033[1;2m$(FILE).test\033[0m"
+	@$(EXEC) < $< 1> $@
 
-.PHONY: %.test %.in %.out
+LABEL_PASS="\033[1;32m[PASSING]\033[1;0m\033[1;2m"
+LABEL_FAIL="\033[1;31m[FAILING]\033[1;0m\033[1;2m"
+
+test/%: test/%.tmp
+	@diff -u $@.out $@.tmp > $@.diff					\
+		&& echo $(LABEL_PASS) "$(notdir $@)""\033[1;0m"	\
+		&& rm $@.diff									\
+		|| echo $(LABEL_FAIL) "$(notdir $@) -> $@.diff""\033[1;0m"
+	@rm $@.tmp
+
+.PHONY: test/%

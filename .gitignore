@@ -13,7 +13,6 @@
 # Build system
 build
 # Test scripts / inputs / outputs
-test/*.out
 test/*.diff
 # Temporary files
 var
