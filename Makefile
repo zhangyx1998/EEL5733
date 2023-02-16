@@ -25,20 +25,23 @@ all: $(patsubst src/%.c,$(BUILD)/%,$(SRCS))
 $(BUILD)/src/%.o: src/%.c $(INCS) $(LIB_INCS)
 	@mkdir -p $(shell dirname $@)
 	@$(CC) $(CFLAGS) -c -fPIC -I./inc -I./lib -o $@ $<
-	@printf "$(BOLD)$$(tput setaf 6)$(notdir $@)$(RESET)"
-	@echo "$$(tput setaf 6) ← $?$(RESET)"
+	$(call report,$@,$<,6)
 
 $(BUILD)/lib/%.o: lib/%.c $(LIB_INCS)
 	@mkdir -p $(shell dirname $@)
 	@$(CC) $(CFLAGS) -c -fPIC -I./lib -o $@ $<
-	@printf "$(BOLD)$$(tput setaf 6)$(notdir $@)$(RESET)"
-	@echo "$$(tput setaf 6) ← $?$(RESET)"
+	$(call report,$@,$<,6)
 
 $(BUILD)/%: $(BUILD)/src/%.o $(patsubst %.c,$(BUILD)/%.o,$(LIB_SRCS))
 	@${CC} -o $@ $?;
 	@chmod +x $@
-	@printf "$(BOLD)$$(tput setaf 4)$(notdir $@)$(RESET)"
-	@echo "$$(tput setaf 4) ← $?$(RESET)"
+	$(call report,$@,$<,4)
+
+define report
+	@tput sgr0; tput setaf $3; tput bold; tput smul;
+	@printf "$(notdir $1)";
+	@tput sgr0; tput setaf $3; echo " ← $2"; tput sgr0;
+endef
 # Debug mode: outputs to $(BUILD)/debug, add DEBUG to CFLAGS
 debug:
 	$(eval CFLAGS=$(CFLAGS) -DDEBUG -g)
