@@ -68,28 +68,31 @@ debug:
 	))
 	$(eval CFLAGS += -DDEBUG_$(DBG_T))
 
-clean:
-	rm -rf $(BUILD)
 # Supress Makefile's "nothing to be done for ..." message
 ENSURE?=all
 ensure: $(ENSURE)
 	@echo > /dev/null
+
 # Special target to zip everything for submission
 BRANCH:=$(shell BR=$$(git branch --show-current); echo $$(tr '[:lower:]' '[:upper:]' <<< $${BR:0:1})$${BR:1})
 FILE_LIST:=$(shell git ls-tree --full-tree --name-only -r HEAD)
-ARCHIVE:=$(AUTHOR)_$(BRANCH)
+ARCHIVE:=var/$(AUTHOR)_$(BRANCH).zip
 
 zip:
-	mkdir -p var
-	@zip var/$(ARCHIVE).zip $(FILE_LIST)
+	@mkdir -p $(basename $(ARCHIVE))
+	@zip $(ARCHIVE) $(FILE_LIST) 1> /dev/null
+	@unzip -l $(ARCHIVE)
 
 include ./test/Makefile
 
+clean:
+	rm -rf $(BUILD)
+	rm -rf $(ARCHIVE)
 # Declare phony and precious targets
-.PHONY: \
-	all clean\
-	ensure %.ensure \
-	debug %.debug \
+.PHONY:				\
+	all clean zip	\
+	ensure %.ensure	\
+	debug %.debug	\
 	test test/%
 
 .PRECIOUS: $(BUILD)/lib/%.o $(BUILD)/src/%.o
