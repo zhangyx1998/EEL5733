@@ -79,7 +79,7 @@ FILE_LIST:=$(shell git ls-tree --full-tree --name-only -r HEAD)
 ARCHIVE:=var/$(AUTHOR)_$(BRANCH).zip
 
 zip:
-	@mkdir -p $(basename $(ARCHIVE))
+	@mkdir -p $(shell dirname $(ARCHIVE))
 	@zip $(ARCHIVE) $(FILE_LIST) 1> /dev/null
 	@-zipinfo -1 $(ARCHIVE) | tree --fromfile .
 
