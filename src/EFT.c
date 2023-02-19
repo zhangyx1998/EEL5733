@@ -35,16 +35,14 @@
 #include "parser.h"
 
 void *producer(Context ctx) {
-	freopen("/Users/Yuxuan/Lab/EEL5733/test/EFT.1.in", "r", stdin);
 	char *buf = NULL;
 	size_t capacity = 0;
 	while (getline(&buf, &capacity, stdin) >= 0) {
 		Instruction inst = parse(buf);
 		if (inst->type == INS_CREATE) {
-			stream_write(
-				ctx->inst_stream,
-				(StreamElement)microOp(OP_CREATE, inst->account_src, inst->amount)
-			);
+			SWMR_lock(ctx->account_vec_lock, LOCK_WR);
+			vector_push(ctx->account_vec, account(inst->account_src, inst->amount));
+			SWMR_unlock(ctx->account_vec_lock);
 		} else if (inst->type == INS_TRANSFER) {
 			stream_write(
 				ctx->inst_stream,
@@ -57,6 +55,7 @@ void *producer(Context ctx) {
 		} else {
 			DEBUG_PRINT("got instruction [%p] with unknown type", (void *)inst);
 		}
+		free((void *)inst);
 	}
 	// Close stream
 	stream_write(ctx->inst_stream, END_OF_STREAM);
@@ -68,8 +67,8 @@ static inline Account getAccount(Context ctx, AccountId id) {
 	size_t i = 0;
 	while (1) {
 		while (i >= vector_len(ctx->account_vec)) {
-			DEBUG_PRINT("waiting for account<%u>", id);
-			TR(SWMR_waitfor)(ctx->account_vec_lock, LOCK_WR);
+			DEBUG_PRINT("waiting for account<%u> to be created", id);
+			SWMR_waitfor(ctx->account_vec_lock, LOCK_WR);
 		}
 		Account a = vector_get(ctx->account_vec, i);
 		if (a->id == id) {
@@ -84,45 +83,39 @@ void *worker(void * context) {
 	const Context ctx = context;
 	MicroOp op;
 	while ((op = (MicroOp)stream_read(ctx->inst_stream)) != (MicroOp)END_OF_STREAM) {
-		if (op->type == OP_CREATE) {
-			SWMR_lock(ctx->account_vec_lock, LOCK_WR);
-			vector_push(ctx->account_vec, account(op->id, op->amount));
-			SWMR_unlock(ctx->account_vec_lock);
-		} else {
-			SWMR_lock(ctx->account_vec_lock, LOCK_RD);
-			Account a = getAccount(ctx, op->id); {
-				// Acquire lock for this account
-				MUTEX_LOCK(a->mutex);
-				// Do the transfer
-				switch (op->type) {
-					case OP_RECV:
-						DEBUG_PRINT(
-							"account<%u> +%lu (balance %lu)",
-							op->id, op->amount, a->balance
-						);
-						a->balance += op->amount;
-						break;
-					case OP_SEND:
-						DEBUG_PRINT(
-							"account<%u> -%lu (balance %lu)",
-							op->id, op->amount, a->balance
-						);
-						MUTEX_COND_WAIT(
-							a->balance >= op->amount,
-							a->transaction,
-							a->mutex
-						);
-						ASSERT(a->balance >= op->amount, "insufficient balance");
-						a->balance -= op->amount;
-						break;
-					default:
-						EPRINT("unknown operation %d", (int)op->type);
-				}
-				pthread_cond_broadcast(a->transaction);
-				MUTEX_UNLOCK(a->mutex);
+		SWMR_lock(ctx->account_vec_lock, LOCK_RD);
+		Account a = getAccount(ctx, op->id); {
+			// Acquire lock for this account
+			MUTEX_LOCK(a->mutex);
+			// Do the transfer
+			switch (op->type) {
+				case OP_RECV:
+					DEBUG_PRINT(
+						"account<%u> +%lu (balance %lu)",
+						op->id, op->amount, a->balance
+					);
+					a->balance += op->amount;
+					break;
+				case OP_SEND:
+					DEBUG_PRINT(
+						"account<%u> -%lu (balance %lu)",
+						op->id, op->amount, a->balance
+					);
+					MUTEX_COND_WAIT(
+						a->balance >= op->amount,
+						a->transaction,
+						a->mutex
+					);
+					ASSERT(a->balance >= op->amount, "insufficient balance");
+					a->balance -= op->amount;
+					break;
+				default:
+					EPRINT("unknown operation %d", (int)op->type);
 			}
-			SWMR_unlock(ctx->account_vec_lock);
+			pthread_cond_broadcast(a->transaction);
+			MUTEX_UNLOCK(a->mutex);
 		}
+		SWMR_unlock(ctx->account_vec_lock);
 		free(op);
 	}
 	return NULL;

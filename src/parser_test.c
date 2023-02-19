@@ -4,7 +4,9 @@
  * @brief Standalone Test Program For Parser
  */
 #include "stdio.h"
+#include "stdlib.h"
 #include "parser.h"
+#include "macros.h"
 
 int main(int argc, const char *argv[]) {
 	char *buf = NULL;
@@ -18,7 +20,7 @@ int main(int argc, const char *argv[]) {
 			i->account_dst,
 			i->amount
 		);
-		free(i);
+		free((void *)i);
 	}
 	return 0;
 }

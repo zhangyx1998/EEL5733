@@ -1,7 +1,8 @@
-test: test_clean $(patsubst %.in,%,$(wildcard test/*.in))
+test: $(patsubst %.in,%,$(wildcard test/*.in))
 
-test_clean:
-	$(foreach F,$(wildcard test/*.diff),$(shell rm $F))
+define exec_return_code:
+	$1 < $2 1> $3; printf $$?
+endef
 
 tmp/%.out: test/%.in
 	@mkdir -p tmp
@@ -14,8 +15,8 @@ tmp/%.out: test/%.in
 	$(eval EXEC=$(BUILD)/$(strip $(EXEC)))
 	@BUILD="$(BUILD)" CFLAGS="$(CFLAGS)" ENSURE="$(EXEC)" \
 	make ensure
-	$(eval CODE=$(shell $(EXEC) < $< 1> $@; echo $$?))
-	@if [ $(CODE) != 0 ]; then					\
+	@CODE=$$($(EXEC) < $< 1> $@; echo $$?);		\
+	if [ $${CODE} != "0" ]; then				\
 		tput sgr0; tput bold; tput setaf 9;		\
 		printf "Runtime Error During Test: "	\
 		tput sgr0; tput smul; tput setaf 8;		\

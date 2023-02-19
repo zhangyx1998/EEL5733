@@ -18,8 +18,12 @@ typedef struct {
 	"Index [%zu] out of range (%zu)", \
 	(size_t)(I), (size_t)(L)
 
+#ifdef DEBUG_LIB_VECTOR
 #define PRINT_VECTOR(V) \
-	// DEBUG_PRINT("[%p] capacity %zu, length %zu", (void *)v, v->capacity, v->length)
+	DEBUG_PRINT("[%p] capacity %zu, length %zu", (void *)v, v->capacity, v->length)
+#else
+#define PRINT_VECTOR(V)
+#endif
 
 // Internal API
 

@@ -41,10 +41,10 @@ int match(const char **s, const char * const template) {
 	}
 }
 
-static inline const char * removeLF(const char * s) {
+static inline const char * const removeLF(const char * s) {
 	size_t l = strlen(s);
 	while (l > 0 && s[l - 1] == '\n') l--;
-	char * str = malloc(l + 1);
+	char * const str = malloc(l + 1);
 	memcpy(str, s, l);
 	str[l] = 0;
 	return str;
@@ -56,7 +56,7 @@ Instruction parse(const char * const buf) {
 		*const s = removeLF(buf),
 		*str = s,
 		*v[VEC_SIZE];
-	Instruction inst = malloc(sizeof(Instruction));
+	Instruction inst = malloc(sizeof(*inst));
 	// Try to validate string as a transfer instruction
 	if (match(&str, "Transfer") && matchNumbers(str, v) == 3) {
 		inst->type        = INS_TRANSFER;
@@ -77,12 +77,13 @@ Instruction parse(const char * const buf) {
 		inst->amount      = 0;
 	}
 	DEBUG_PRINT(
-		"[%c] account_src=%-2u account_dst=%-2u amount=%lu",
+		"[%c] account_src<%u> account_dst<%u> $%lu",
 		(char)inst->type,
 		inst->account_src,
 		inst->account_dst,
 		inst->amount
 	);
+	DEBUG_PRINT("%s", s);
 	free((void *)s);
 	return inst;
 }

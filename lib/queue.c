@@ -11,6 +11,7 @@ typedef struct Queue {
 	size_t capacity, size;
 } * const _Queue_;
 
+#ifdef DEBUG_LIB_QUEUE
 #define REPORT_QUEUE_OPERATION(Q, E)		\
 	DEBUG_PRINT(							\
 		"[%p] range(%zu->%zu) size=%zu",	\
@@ -19,6 +20,9 @@ typedef struct Queue {
 		(size_t)(Q->insert_p - Q->buffer),	\
 		Q->size								\
 	)
+#else
+#define REPORT_QUEUE_OPERATION(Q, E)
+#endif
 
 Queue create_queue(size_t capacity) {
 	ASSERT(capacity > 0, "initializing queue with length of 0");

@@ -10,7 +10,7 @@
 #include "macros.h"
 #include "account.h"
 
-typedef enum MicroOpType {OP_CREATE='$', OP_SEND='-', OP_RECV='+'} MicroOpType;
+typedef enum MicroOpType {OP_SEND='-', OP_RECV='+'} MicroOpType;
 
 typedef struct MicroOp {
 	MicroOpType type;

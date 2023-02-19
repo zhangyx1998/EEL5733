@@ -6,7 +6,8 @@ AUTHOR	 ?= Yuxuan_Zhang
 BUILD	 ?= build
 # Compiler Parameters
 CC		 ?= gcc
-CFLAGS	 ?= -Wall
+CFLAGS	 ?=
+CFLAGS	 += -Wall
 # Source and header file list
 SRCS     := $(wildcard src/*.c)
 INCS     := $(wildcard inc/*.h)
@@ -51,9 +52,9 @@ define check_main
 endef
 # Debug mode: outputs to $(BUILD)/debug, add DEBUG to CFLAGS
 debug:
-	$(eval CFLAGS=$(CFLAGS) -DDEBUG -g)
-	$(eval BUILD=$(BUILD)/debug)
-	BUILD="$(BUILD)" CFLAGS="$(CFLAGS)" make all
+	$(eval CFLAGS += -DDEBUG -g)
+	$(eval BUILD  := $(BUILD)/debug)
+	@BUILD="$(BUILD)" CFLAGS="$(CFLAGS)" make ensure
 
 clean:
 	rm -rf $(BUILD)
@@ -73,5 +74,5 @@ zip:
 include ./test/Makefile
 
 # Declare phony and precious targets
-.PHONY: all ensure debug clean test test/%
+.PHONY: all ensure %.ensure debug DEBUG_% clean test test/%
 .PRECIOUS: $(BUILD)/lib/%.o $(BUILD)/src/%.o
