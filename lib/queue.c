@@ -1,68 +1,78 @@
+/**
+ * EEL5733 Assignments
+ * @author Yuxuan Zhang (zhangyuxuan@ufl.edu)
+ * @brief Queue implementations
+ */
 #include "macros.h"
 #include "queue.h"
 
-struct Queue {
-	QueueElement *buffer, *start, *end;
-	size_t capacity;
-	unsigned short empty;
-};
+typedef struct Queue {
+	QueueElement *buffer, *delete_p, *insert_p;
+	size_t capacity, size;
+} * const _Queue_;
 
-typedef struct Queue Queue;
+#define REPORT_QUEUE_OPERATION(Q, E)		\
+	DEBUG_PRINT(							\
+		"[%p] range(%zu->%zu) size=%zu",	\
+		(void *)E,							\
+		(size_t)(Q->delete_p - Q->buffer),	\
+		(size_t)(Q->insert_p - Q->buffer),	\
+		Q->size								\
+	)
 
-void *create_queue(size_t capacity) {
+Queue create_queue(size_t capacity) {
 	ASSERT(capacity > 0, "initializing queue with length of 0");
-	Queue * const q = malloc(sizeof(Queue));
-	q->buffer = malloc(capacity * sizeof(*q->buffer));
+	_Queue_ q = malloc(sizeof(*q));
+	q->buffer = malloc(capacity * sizeof(*(q->buffer)));
 	q->capacity = capacity;
-	q->start = q->buffer;
-	q->end = q->buffer;
-	q->empty = 1;
-	return (void *)q;
+	q->delete_p = q->buffer;
+	q->insert_p = q->buffer;
+	q->size = 0;
+	REPORT_QUEUE_OPERATION(q, NULL);
+	return q;
 }
 
-void free_queue(void * const queue) {
-	Queue * const q = queue;
+void destroy_queue(Queue queue) {
+	_Queue_ q = queue;
 	free(q->buffer);
 	free(q);
 }
 
-size_t queue_len(void * const queue) {
-	Queue * const q = queue;
-	if (q->empty)
-		return 0;
-	else if (q->start < q->end)
-		return q->end - q->start;
-	else
-		return q->capacity - (q->start - q->end);
+size_t queue_len(Queue queue) {
+	_Queue_ q = queue;
+	return q->size;
 }
 
-unsigned short queue_empty(void * const queue) {
-	Queue * const q = queue;
-	return q->empty;
+unsigned short queue_empty(Queue queue) {
+	_Queue_ q = queue;
+	return q->size == 0;
 }
 
-unsigned short queue_full(void * const queue) {
-	Queue * const q = queue;
-	return (q->start == q->end) && !q->empty;
+unsigned short queue_full(Queue queue) {
+	_Queue_ q = queue;
+	return q->size == q->capacity;
 }
 
-#define MOVE_NEXT(Q, P) { 					\
-	if (++P >= (Q)->buffer + (Q)->capacity)	\
-		P = (Q)->buffer;					\
+#define QUEUE_PTR_TO_NEXT(Q, P) { 				\
+	if (++(P) >= ((Q)->buffer + (Q)->capacity))	\
+		(P) = (Q)->buffer;						\
 }
 
-void enqueue(void * const queue, const QueueElement c) {
-	Queue * const q = queue;
-	*(q->end) = c;
-	MOVE_NEXT(q, q->end);
-	q->empty = 0;
+void enqueue(Queue queue, const QueueElement e) {
+	_Queue_ q = queue;
+	ASSERT(q->size < q->capacity, "write overflow");
+	*(q->insert_p) = e;
+	QUEUE_PTR_TO_NEXT(q, q->insert_p);
+	q->size++;
+	REPORT_QUEUE_OPERATION(q, e);
 }
 
-QueueElement dequeue(void * const queue) {
-	Queue * const q = queue;
-	const QueueElement c = *(q->start);
-	MOVE_NEXT(q, q->start);
-	if (q->start == q->end)
-		q->empty = 1;
-	return c;
+QueueElement dequeue(Queue queue) {
+	_Queue_ q = queue;
+	ASSERT(q->size > 0, "read overflow");
+	const QueueElement e = *(q->delete_p);
+	QUEUE_PTR_TO_NEXT(q, q->delete_p);
+	q->size--;
+	REPORT_QUEUE_OPERATION(q, e);
+	return e;
 }

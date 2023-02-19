@@ -1,0 +1,7 @@
+C src=1 dst=1 amt=1000
+C src=2 dst=2 amt=50
+C src=3 dst=3 amt=400
+C src=4 dst=4 amt=150
+T src=1 dst=2 amt=200
+T src=1 dst=4 amt=50
+T src=2 dst=3 amt=100

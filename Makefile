@@ -1,43 +1,50 @@
 # Created by Yuxuan Zhang,
 # University of Florida
 # SHELL := /bin/bash
-AUTHOR	?= Yuxuan_Zhang
+AUTHOR	 ?= Yuxuan_Zhang
 # Env related settings
-BUILD	?= build
+BUILD	 ?= build
 # Compiler Parameters
-CC		?= gcc
-CFLAGS	?= -Wall
+CC		 ?= gcc
+CFLAGS	 ?= -Wall
+# Source and header file list
+SRCS     := $(wildcard src/*.c)
+INCS     := $(wildcard inc/*.h)
+SRC_LIST := $(patsubst src/%.c,$(BUILD)/src/%.o,$(SRCS))
+INC_LIST := $(patsubst inc/%.h,$(BUILD)/src/%.o,$(INCS))
+OBJS     := $(filter     $(INC_LIST), $(SRC_LIST))
+TARGETS  := $(filter-out $(INC_LIST), $(SRC_LIST))
+TARGETS  := $(patsubst $(BUILD)/src/%.o,$(BUILD)/%,$(TARGETS))
 # Object list
-SRCS     = $(wildcard src/*.c)
-INCS     = $(wildcard inc/*.h)
-LIB_INCS = $(wildcard lib/*.h)
-LIB_SRCS = $(wildcard lib/*.c)
-# ESCAPE Codes
-BOLD = $(shell tput bold)
-SMUL = $(shell tput smul)
-RMUL = $(shell tput rmul)
-SMSO = $(shell tput smso)
-RMSO = $(shell tput rmso)
-RESET = $(shell tput sgr0)
+# Library Lists
+LIB_INCS := $(wildcard lib/*.h)
+LIB_SRCS := $(wildcard lib/*.c)
+LIB_OBJS := $(patsubst %.c,$(BUILD)/%.o,$(LIB_SRCS))
 # Default target
-all: $(patsubst src/%.c,$(BUILD)/%,$(SRCS))
+all: $(TARGETS)
 
 $(BUILD)/src/%.o: src/%.c $(INCS) $(LIB_INCS)
+	$(call report,$@,$<,6)
 	@mkdir -p $(shell dirname $@)
 	@$(CC) $(CFLAGS) -c -fPIC -I./inc -I./lib -o $@ $<
-	$(call report,$@,$<,6)
 
 $(BUILD)/lib/%.o: lib/%.c $(LIB_INCS)
+	$(call report,$@,$<,6)
 	@mkdir -p $(shell dirname $@)
 	@$(CC) $(CFLAGS) -c -fPIC -I./lib -o $@ $<
-	$(call report,$@,$<,6)
 
-$(BUILD)/%: $(BUILD)/src/%.o $(patsubst %.c,$(BUILD)/%.o,$(LIB_SRCS))
-	@${CC} -o $@ $?;
-	@chmod +x $@
+$(BUILD)/%: $(BUILD)/src/%.o $(LIB_OBJS) $(OBJS)
 	$(call report,$@,$<,4)
+	@${CC} -o $@ $^;
+	@chmod +x $@
 
 define report
+	@tput sgr0; tput setaf $3; tput bold; tput smul;
+	@printf "$(notdir $1)";
+	@tput sgr0; tput setaf $3; echo " ← $2"; tput sgr0;
+endef
+
+define check_main
 	@tput sgr0; tput setaf $3; tput bold; tput smul;
 	@printf "$(notdir $1)";
 	@tput sgr0; tput setaf $3; echo " ← $2"; tput sgr0;
@@ -68,4 +75,3 @@ include ./test/Makefile
 # Declare phony and precious targets
 .PHONY: all ensure debug clean test test/%
 .PRECIOUS: $(BUILD)/lib/%.o $(BUILD)/src/%.o
-
