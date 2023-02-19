@@ -83,7 +83,6 @@ Instruction parse(const char * const buf) {
 		inst->account_dst,
 		inst->amount
 	);
-	DEBUG_PRINT("%s", s);
 	free((void *)s);
 	return inst;
 }

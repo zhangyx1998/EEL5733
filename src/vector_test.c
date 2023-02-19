@@ -18,7 +18,7 @@ int main(int argc, const char *argv[]) {
 			EPRINT("Invalid line: %s", buf);
 			continue;
 		}
-		DEBUG_PRINT("Got line %s", buf);
+		DEBUG_PRINT("%.*s", (int)(strlen(buf) - 1), buf);
 		char *s = NULL;
 		int i;
 		switch (buf[0]) {
@@ -44,6 +44,7 @@ int main(int argc, const char *argv[]) {
 	while (vector_len(vec)) {
 		char *s = vector_pop(vec);
 		fputs(s, stdout);
+		DEBUG_PRINT("<< \"%.*s\"", (int)(strlen(s) - 1), s);
 		free(s);
 	}
 	return 0;

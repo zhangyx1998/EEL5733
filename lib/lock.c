@@ -67,12 +67,16 @@ void destroy_SWMR_lock(SWMR_Lock lock) {
 	free(l);
 }
 
+#ifdef DEBUG_LIB_LOCK
 #define REPORT_SWMR_LOCK_STATE(L) 	\
 	DEBUG_PRINT(					\
 		"[%c] (%u refs)",			\
 		(char)(L)->state,			\
 		(L)->ref_count				\
 	)
+#else
+#define REPORT_SWMR_LOCK_STATE(L)
+#endif
 
 void SWMR_lock(SWMR_Lock lock, const LOCK_ACCESS_TYPE t) {
 	const _SWMR_Lock_ l = (_SWMR_Lock_)lock;

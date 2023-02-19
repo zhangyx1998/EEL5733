@@ -6,8 +6,7 @@ AUTHOR	 ?= Yuxuan_Zhang
 BUILD	 ?= build
 # Compiler Parameters
 CC		 ?= gcc
-CFLAGS	 ?=
-CFLAGS	 += -Wall
+CFLAGS	 ?= -Wall
 # Source and header file list
 SRCS     := $(wildcard src/*.c)
 INCS     := $(wildcard inc/*.h)
@@ -16,7 +15,6 @@ INC_LIST := $(patsubst inc/%.h,$(BUILD)/src/%.o,$(INCS))
 OBJS     := $(filter     $(INC_LIST), $(SRC_LIST))
 TARGETS  := $(filter-out $(INC_LIST), $(SRC_LIST))
 TARGETS  := $(patsubst $(BUILD)/src/%.o,$(BUILD)/%,$(TARGETS))
-# Object list
 # Library Lists
 LIB_INCS := $(wildcard lib/*.h)
 LIB_SRCS := $(wildcard lib/*.c)
@@ -27,16 +25,22 @@ all: $(TARGETS)
 $(BUILD)/src/%.o: src/%.c $(INCS) $(LIB_INCS)
 	$(call report,$@,$<,6)
 	@mkdir -p $(shell dirname $@)
-	@$(CC) $(CFLAGS) -c -fPIC -I./inc -I./lib -o $@ $<
+	@tput setaf 0
+	$(CC) $(CFLAGS) -c -fPIC -I./inc -I./lib -o $@ $<
+	@tput sgr0;
 
 $(BUILD)/lib/%.o: lib/%.c $(LIB_INCS)
 	$(call report,$@,$<,6)
 	@mkdir -p $(shell dirname $@)
-	@$(CC) $(CFLAGS) -c -fPIC -I./lib -o $@ $<
+	@tput setaf 0
+	$(CC) $(CFLAGS) -c -fPIC -I./lib -o $@ $<
+	@tput sgr0;
 
 $(BUILD)/%: $(BUILD)/src/%.o $(LIB_OBJS) $(OBJS)
 	$(call report,$@,$<,4)
-	@${CC} -o $@ $^;
+	@tput setaf 0
+	${CC} -o $@ $^
+	@tput sgr0;
 	@chmod +x $@
 
 define report
@@ -54,7 +58,15 @@ endef
 debug:
 	$(eval CFLAGS += -DDEBUG -g)
 	$(eval BUILD  := $(BUILD)/debug)
-	@BUILD="$(BUILD)" CFLAGS="$(CFLAGS)" make ensure
+
+%.debug: debug
+	@rm -f $(BUILD)/$(@:.debug=.o)
+	$(eval DBG_T := $(shell	\
+		echo $(@:.debug=) |	\
+		sed -e 's/\//_/g' |	\
+		tr 'a-z' 'A-Z'		\
+	))
+	$(eval CFLAGS += -DDEBUG_$(DBG_T))
 
 clean:
 	rm -rf $(BUILD)
@@ -74,5 +86,10 @@ zip:
 include ./test/Makefile
 
 # Declare phony and precious targets
-.PHONY: all ensure %.ensure debug DEBUG_% clean test test/%
+.PHONY: \
+	all clean\
+	ensure %.ensure \
+	debug %.debug \
+	test test/%
+
 .PRECIOUS: $(BUILD)/lib/%.o $(BUILD)/src/%.o

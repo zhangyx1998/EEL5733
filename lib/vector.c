@@ -19,8 +19,11 @@ typedef struct {
 	(size_t)(I), (size_t)(L)
 
 #ifdef DEBUG_LIB_VECTOR
-#define PRINT_VECTOR(V) \
-	DEBUG_PRINT("[%p] capacity %zu, length %zu", (void *)v, v->capacity, v->length)
+#define PRINT_VECTOR(V)						\
+	DEBUG_PRINT(							\
+		"[%p] length %zu (capacity %zu)",	\
+		(void *)v, v->length, v->capacity	\
+	)
 #else
 #define PRINT_VECTOR(V)
 #endif
@@ -28,7 +31,6 @@ typedef struct {
 // Internal API
 
 void _vector_fit_(_Vector_ v, size_t size) {
-	DEBUG_PRINT("capacity %zu, fitting %zd", v->capacity, size);
 	if (size > v->capacity) {
 		v->capacity += VECTOR_CHUNK_SIZE - (v->capacity % VECTOR_CHUNK_SIZE);
 		v->buffer = realloc(v->buffer, S(v->capacity));
@@ -45,10 +47,12 @@ Vector vector() {
 	v->capacity = 0;
 	v->length = 0;
 	v->buffer = NULL;
+#ifdef DEBUG_LIB_VECTOR
 	DEBUG_PRINT(
 		"initializing %p (capacity %zu, length %zu)",
 		(void *)v, v->capacity, v->length
 	);
+#endif
 	return (Vector)v;
 }
 
@@ -61,7 +65,6 @@ void _vector(Vector vector) {
 
 size_t vector_len(Vector vector) {
 	_Vector_ v = vector;
-	PRINT_VECTOR(v);
 	return v->length;
 }
 
@@ -81,24 +84,24 @@ void vector_set(Vector vector, size_t i, VectorElement e) {
 
 void vector_push(Vector vector, VectorElement e) {
 	_Vector_ v = vector;
-	PRINT_VECTOR(v);
 	_vector_fit_(v, v->length + 1);
 	(v->buffer)[v->length++] = e;
+	PRINT_VECTOR(v);
 }
 
 VectorElement vector_pop(Vector vector) {
 	_Vector_ v = vector;
-	PRINT_VECTOR(v);
 	ASSERT(v->length >= 1, OVERFLOW_MSG(1, v->length));
-	VectorElement e = (v->buffer)[--v->length];
+	VectorElement e = (v->buffer)[--(v->length)];
 	_vector_fit_(v, v->length);
+	PRINT_VECTOR(v);
 	return e;
 }
 
 void vector_shift(Vector vector, VectorElement e) {
 	_Vector_ v = vector;
+	_vector_fit_(v, ++(v->length));
 	PRINT_VECTOR(v);
-	_vector_fit_(v, ++v->length);
 	memmove(
 		v->buffer + 1,
 		v->buffer,

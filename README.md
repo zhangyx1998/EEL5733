@@ -1,18 +1,5 @@
 # EEL5733 Assignment 3
 
-## Notes
-
-I implemented the producer as `thread_puts()`, and the consumer as
-`thread_getline()`. These functions have exactly the same parameter lists and
-return types as the ones found in `stdio.h`.
-
-This type of implementation enables me to drop-in replace the I/O functions
-of my original `email_filter` and `calendar_filter`, with almost no modification
-to their original code.
-
-Thanks to that, I can direct the I/O of both child threads however I want.
-Please have a look at [](src/email_filter.c) and [](src/calendar_filter.c).
-
 ## Compile & Test
 
 An extended `Makefile` was implemented along with the project.

@@ -126,6 +126,8 @@ int main(int argc, const char *argv[]) {
 	const size_t
 		n_threads = (size_t)(argc >= 2 ? atoi(argv[1]) : 10),
 		buf_size  = (size_t)(argc >= 3 ? atoi(argv[2]) : 16);
+	// Check if n_threads > 0
+	ASSERT(n_threads > 0, "number of threads must be greater than 0");
 	// Initialize context
 	Context ctx = context(buf_size);
 	// Launch execution workers
