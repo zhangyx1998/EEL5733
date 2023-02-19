@@ -81,7 +81,7 @@ ARCHIVE:=var/$(AUTHOR)_$(BRANCH).zip
 zip:
 	@mkdir -p $(basename $(ARCHIVE))
 	@zip $(ARCHIVE) $(FILE_LIST) 1> /dev/null
-	@unzip -l $(ARCHIVE)
+	@-zipinfo -1 $(ARCHIVE) | tree --fromfile .
 
 include ./test/Makefile
 
