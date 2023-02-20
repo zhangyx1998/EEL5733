@@ -10,7 +10,7 @@
 #include "pthread.h"
 
 typedef unsigned int AccountId;
-typedef unsigned long CashValue;
+typedef long CashValue;
 
 typedef struct {
 	AccountId id;

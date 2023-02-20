@@ -61,13 +61,13 @@ Instruction parse(const char * const buf) {
 	if (match(&str, "Transfer") && matchNumbers(str, v) == 3) {
 		inst->type        = INS_TRANSFER;
 		inst->account_src = (AccountId)atoi(v[0]);
-		inst->account_dst = (AccountId)atoi(v[1]);
-		inst->amount      = (CashValue)atoi(v[2]);
+		inst->account_dst = (AccountId)atol(v[1]);
+		inst->amount      = (CashValue)atol(v[2]);
 	} else if (matchNumbers(str, v) == 2) {
 		inst->type        = INS_CREATE;
 		inst->account_src = (AccountId)atoi(v[0]);
-		inst->account_dst = (AccountId)atoi(v[0]);
-		inst->amount      = (CashValue)atoi(v[1]);
+		inst->account_dst = (AccountId)atol(v[0]);
+		inst->amount      = (CashValue)atol(v[1]);
 	} else {
 		// No match, log the error and return empty instruction
 		EPRINT("unable to match \"%s\" with any instruction type.", str);

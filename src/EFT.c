@@ -86,37 +86,34 @@ void *worker(void * context) {
 		SWMR_lock(ctx->account_vec_lock, LOCK_RD);
 		Account a = getAccount(ctx, op->id); {
 			// Acquire lock for this account
-			MUTEX_LOCK(a->mutex);
-			// Do the transfer
-			switch (op->type) {
-				case OP_RECV:
-					DEBUG_PRINT(
-						"account<%u> +%lu (balance %lu)",
-						op->id, op->amount, a->balance
-					);
-					a->balance += op->amount;
-					break;
-				case OP_SEND:
-					DEBUG_PRINT(
-						"account<%u> -%lu (balance %lu)",
-						op->id, op->amount, a->balance
-					);
-					MUTEX_COND_WAIT(
-						a->balance >= op->amount,
-						a->transaction,
-						a->mutex
-					);
-					ASSERT(a->balance >= op->amount, "insufficient balance");
-					a->balance -= op->amount;
-					break;
-				default:
-					EPRINT("unknown operation %d", (int)op->type);
+			if (pthread_mutex_trylock(a->mutex) == 0) {
+				// Do the transfer
+				switch (op->type) {
+					case OP_RECV:
+						DEBUG_PRINT(
+							"account<%u> +%lu (balance %ld)",
+							op->id, op->amount, a->balance
+						);
+						a->balance += op->amount;
+						break;
+					case OP_SEND:
+						DEBUG_PRINT(
+							"account<%u> -%lu (balance %ld)",
+							op->id, op->amount, a->balance
+						);
+						a->balance -= op->amount;
+						break;
+					default:
+						EPRINT("unknown operation %d", (int)op->type);
+				}
+				free(op);
+				MUTEX_UNLOCK(a->mutex);
+			} else {
+				// Push micro operation back to stream
+				stream_write(ctx->inst_stream, (StreamElement)op);
 			}
-			pthread_cond_broadcast(a->transaction);
-			MUTEX_UNLOCK(a->mutex);
 		}
 		SWMR_unlock(ctx->account_vec_lock);
-		free(op);
 	}
 	return NULL;
 }
@@ -146,7 +143,7 @@ int main(int argc, const char *argv[]) {
 	// Print final result
 	while (vector_len(ctx->account_vec)) {
 		Account a = vector_unshift(ctx->account_vec);
-		printf("%u %lu\n", a->id, a->balance);
+		printf("%u %ld\n", a->id, a->balance);
 		_account(a);
 	}
 	// Free context
