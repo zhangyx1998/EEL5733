@@ -1,12 +1,12 @@
 # Created by Yuxuan Zhang,
 # University of Florida
 # SHELL := /bin/bash
-AUTHOR	 ?= Yuxuan_Zhang
+AUTHOR   ?= Yuxuan_Zhang
 # Env related settings
-BUILD	 ?= build
+BUILD    ?= build
 # Compiler Parameters
-CC		 ?= gcc
-CFLAGS	 ?= -Wall
+CC       ?= gcc
+CFLAGS   ?= -Wall
 # Source and header file list
 SRCS     := $(wildcard src/*.c)
 INCS     := $(wildcard inc/*.h)
@@ -19,6 +19,8 @@ TARGETS  := $(patsubst $(BUILD)/src/%.o,$(BUILD)/%,$(TARGETS))
 LIB_INCS := $(wildcard lib/*.h)
 LIB_SRCS := $(wildcard lib/*.c)
 LIB_OBJS := $(patsubst %.c,$(BUILD)/%.o,$(LIB_SRCS))
+# Format Escape Sequence
+E        :=\033[
 # Default target
 all: $(TARGETS)
 
@@ -49,19 +51,16 @@ define report
 	@tput sgr0; tput setaf $3; echo " ← $2"; tput sgr0;
 endef
 
-define check_main
-	@tput sgr0; tput setaf $3; tput bold; tput smul;
-	@printf "$(notdir $1)";
-	@tput sgr0; tput setaf $3; echo " ← $2"; tput sgr0;
-endef
 # Debug mode: outputs to $(BUILD)/debug, add DEBUG to CFLAGS
 debug:
 	$(eval CFLAGS += -DDEBUG -g)
 	$(eval BUILD  := $(BUILD)/debug)
+	@	BUILD="$(BUILD)" CFLAGS="$(CFLAGS)"			\
+		make ensure --no-print-directory
 
 %.debug: debug
 	@rm -f $(BUILD)/$(@:.debug=.o)
-	$(eval DBG_T := $(shell	\
+	$(eval DBG_T :=$(shell	\
 		echo $(@:.debug=) |	\
 		sed -e 's/\//_/g' |	\
 		tr 'a-z' 'A-Z'		\
@@ -74,14 +73,18 @@ ensure: $(ENSURE)
 	@echo > /dev/null
 
 # Special target to zip everything for submission
-BRANCH:=$(shell BR=$$(git branch --show-current); echo $$(tr '[:lower:]' '[:upper:]' <<< $${BR:0:1})$${BR:1})
+BRANCH   :=$(shell git branch --show-current)
+BRANCH   :=$(patsubst assignment_%,Assignment_%,$(BRANCH))
 FILE_LIST:=$(shell git ls-tree --full-tree --name-only -r HEAD)
-ARCHIVE:=var/$(AUTHOR)_$(BRANCH).zip
-
+ARCHIVE  :=var/$(AUTHOR)_$(BRANCH).zip
+MSG_ZIP  :=$$(tput setaf 9)Commit all changes before $$(tput smul)zip$$(tput rmul)!$$(tput sgr0)
 zip:
-	@mkdir -p $(shell dirname $(ARCHIVE))
-	@zip $(ARCHIVE) $(FILE_LIST) 1> /dev/null
-	@-zipinfo -1 $(ARCHIVE) | tree --fromfile .
+	@	git update-index --refresh		\
+	&&	git diff-index --quiet HEAD --	\
+	||	(echo $(MSG_ZIP); exit 1)
+	@	mkdir -p $(shell dirname $(ARCHIVE))
+	@	zip $(ARCHIVE) $(FILE_LIST) 1> /dev/null
+	@-	zipinfo -1 $(ARCHIVE) | tree --fromfile .
 
 include ./test/Makefile
 
