@@ -33,11 +33,6 @@ void _stream(Stream stream) {
 void stream_write(Stream stream, StreamElement e) {
 	const _Stream_ s = stream;
 	MUTEX_LOCK(s->mutex->lock);
-	// Check if stream has already been closed
-	if (s->closed) {
-		EPRINT("Writing to closed stream [%p]", (void *)s);
-		return;
-	}
 	// Check if writing EOS to stream
 	if (e == END_OF_STREAM) {
 		MUTEX_COND_WAIT(
@@ -67,7 +62,7 @@ StreamElement stream_read(Stream stream) {
 		s->mutex->sig_produce,
 		s->mutex->lock
 	);
-	StreamElement e = s->closed
+	StreamElement e = queue_empty(s->queue)
 		? END_OF_STREAM
 		: dequeue(s->queue);
 	ASSERT(

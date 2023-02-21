@@ -3,7 +3,6 @@
  * @author Yuxuan Zhang (zhangyuxuan@ufl.edu)
  * @brief Standalone Test Program For "Stream"
  */
-
 #include "stdio.h"
 #include "pthread.h"
 /* ======= project library ====== */
@@ -14,7 +13,7 @@ Stream s;
 int *list = NULL;
 
 void *producer(size_t test_size) {
-	list = realloc(list, test_size);
+	list = realloc(list, test_size * sizeof(*list));
 	for (size_t i = 0; i < test_size; i++) {
 		list[i] = (i + 1) & 1 ? i + 1 : -i;
 		stream_write(s, (StreamElement)&list[i]);
