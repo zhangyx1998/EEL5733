@@ -30,7 +30,7 @@ tmp/%.out: test/%.in $(call exec_name,$(@:.out=)) tmp
 	$(eval EXEC:=$(call exec_name,$(@:.out=)))
 	$(eval TEST:=$(EXEC) < $< 1> $@)
 	@	$(call env) $(MAKE) $(EXEC)
-	@	time -p -o $(@:.out=.time) $(TEST)		\
+	@	env time -p -o $(@:.out=.time) $(TEST)		\
 	||	(echo "$(MSG_ERUN)$(TEST)"; tput sgr0)
 
 # Report performance on all test inputs
