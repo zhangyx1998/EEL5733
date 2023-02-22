@@ -19,7 +19,7 @@ $(shell echo $(BUILD)/$(notdir $1) | sed -E 's/\.[0-9]+$$//g')
 endef
 MSG_ERUN:=$E0;1;91mRuntime Error: $E0;90m
 # Generate outputs using corresponding inputs
-tmp/%.out: test/%.in tmp
+tmp/%.out: test/%.in $(call exec_name,$(@:.out=)) tmp
 	$(eval EXEC:=$(call exec_name,$(@:.out=)))
 	$(eval TEST:=$(EXEC) < $< 1> $@)
 	@	$(call env) $(MAKE) $(EXEC)
@@ -34,10 +34,9 @@ perf.env:
 	$(eval LDFLAGS+="-pg")
 
 # Run performance test for specific input
-test/%.perf: test/%.in perf.env
+test/%.perf: perf.env tmp/%.out
 	$(eval EXEC:=$(call exec_name,$(@:.perf=)))
-	$(eval FOUT:=$(patsubst $(BUILD)/%,$(BUILD)/src/%.o,$(EXEC)))
-	@$(call env) $(MAKE) $(EXEC)
-	# gprof $(EXEC) $(FOUT) < $< 2> /dev/null
+	@mv gmon.out $@
+	@-gprof $(EXEC) $@
 
-.PHONY: test test/%.test perf perf.env test/%.perf
+.PHONY: test test/%.test perf perf.env

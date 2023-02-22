@@ -16,9 +16,10 @@ repo_is_clean:
 
 # Clean all make generated folders and files
 clean:
-	@rm -rf $(BUILD)
-	@rm -rf $(ARCHIVE)
-	@rm -rf test/*.diff
-	@rm -rf tmp
+	@-rm -rf $(BUILD)
+	@-rm -rf $(ARCHIVE)
+	@-rm -rf test/*.diff
+	@-rm -rf test/*.perf
+	@-rm -rf tmp
 
 .PHONY: repo_is_clean clean
