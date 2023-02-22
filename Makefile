@@ -25,30 +25,26 @@ E        :=\033[
 all: $(TARGETS)
 
 $(BUILD)/src/%.o: src/%.c $(INCS) $(LIB_INCS)
-	$(call report,$@,$<,6)
+	$(call report,$@,$<,95)
 	@mkdir -p $(shell dirname $@)
-	@tput setaf 0
 	$(CC) $(CFLAGS) -c -fPIC -I./inc -I./lib -o $@ $<
-	@tput sgr0;
+	@printf "$E0m"
 
 $(BUILD)/lib/%.o: lib/%.c $(LIB_INCS)
-	$(call report,$@,$<,6)
+	$(call report,$@,$<,95)
 	@mkdir -p $(shell dirname $@)
-	@tput setaf 0
 	$(CC) $(CFLAGS) -c -fPIC -I./lib -o $@ $<
-	@tput sgr0;
+	@printf "$E0m"
 
 $(BUILD)/%: $(BUILD)/src/%.o $(LIB_OBJS) $(OBJS)
-	$(call report,$@,$<,4)
-	@tput setaf 0
+	$(call report,$@,$<,94)
 	${CC} -o $@ $^
-	@tput sgr0;
-	@chmod +x $@
+	@printf "$E0m"; chmod +x $@
 
 define report
-	@tput sgr0; tput setaf $3; tput bold; tput smul;
-	@printf "$(notdir $1)";
-	@tput sgr0; tput setaf $3; echo " ← $2"; tput sgr0;
+	@echo							\
+		"$E0;1;4;$3m$(notdir $1)"	\
+		"$E0;$3m<- $2$E0;90m"
 endef
 
 # Debug mode: outputs to $(BUILD)/debug, add DEBUG to CFLAGS
@@ -77,7 +73,7 @@ BRANCH   :=$(shell git branch --show-current)
 BRANCH   :=$(patsubst assignment_%,Assignment_%,$(BRANCH))
 FILE_LIST:=$(shell git ls-tree --full-tree --name-only -r HEAD)
 ARCHIVE  :=var/$(AUTHOR)_$(BRANCH).zip
-MSG_ZIP  :=$$(tput setaf 9)Commit all changes before $$(tput smul)zip$$(tput rmul)!$$(tput sgr0)
+MSG_ZIP  :=$E0;91mCommit all changes before $E4mzip$E24m!$E0m
 zip:
 	@	git update-index --refresh		\
 	&&	git diff-index --quiet HEAD --	\
