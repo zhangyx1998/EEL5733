@@ -20,14 +20,20 @@
  *    locate the accounts using `id`. If no match was found,
  *    the thread will wait for next write to the list and try
  *    again.
+ * 
+ * 4. The only thing stopping me from launching producer in
+ *    multiple threads is the request that the account list
+ *    have to be printed in the same order as input.
+ *    All other parts of this program can handle out-of-order
+ *    parsing and execution.
  */
-
 #include "stdio.h"
 #include "pthread.h"
 /* ======= project library ====== */
 #include "vector.h"
 #include "lock.h"
 #include "macros.h"
+#include "statistics.h"
 /* ======= local includes ======= */
 #include "micro_op.h"
 #include "account.h"
@@ -79,6 +85,7 @@ static inline Account getAccount(Context ctx, AccountId id) {
 }
 
 void *worker(void * context) {
+	STAT(consumer_hit);
 	DEBUG_PRINT("initiated");
 	const Context ctx = context;
 	MicroOp op;
@@ -87,6 +94,7 @@ void *worker(void * context) {
 		Account a = getAccount(ctx, op->id); {
 			// Acquire lock for this account
 			if (pthread_mutex_trylock(a->mutex) == 0) {
+				STAT_UPDATE(consumer_hit, 1);
 				// Do the transfer
 				switch (op->type) {
 					case OP_RECV:
@@ -109,12 +117,15 @@ void *worker(void * context) {
 				free(op);
 				MUTEX_UNLOCK(a->mutex);
 			} else {
+				STAT_UPDATE(consumer_hit, 0);
 				// Push micro operation back to stream
 				stream_write(ctx->inst_stream, (StreamElement)op);
 			}
 		}
 		SWMR_unlock(ctx->account_vec_lock);
 	}
+	// Report Statistic result
+	STAT_REPORT(consumer_hit);
 	return NULL;
 }
 
