@@ -1,6 +1,6 @@
 # Creates a zip file for current workspace
 AUTHOR   := $(shell git config --get user.name || whoami)
-AUTHOR   := $(shell echo $(AUTHOR) | sed -E 's/\W/_/g')
+AUTHOR   := $(shell echo $(AUTHOR) | tr ' ' '_')
 BRANCH   := $(shell git branch --show-current)
 BRANCH   := $(patsubst assignment_%,Assignment_%,$(BRANCH))
 FILE_LIST:= $(shell git ls-tree --full-tree --name-only -r HEAD)
