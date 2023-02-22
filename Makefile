@@ -7,7 +7,8 @@ BUILD    ?= build
 MAKE     := make --no-print-directory
 CC       := gcc
 LD       := gcc
-CCFLAGS  ?= -Wall
+CFLAGS   ?= -Wall -c
+ARFLAGS  ?=
 LDFLAGS  ?=
 # Source and header file list
 SRCS     := $(wildcard src/*.c)
@@ -29,26 +30,27 @@ all: $(TARGETS)
 
 # Complie User Sources to Objects
 $(BUILD)/src/%.o: src/%.c $(INCS) $(LIB_INCS) $(BUILD)/env
-	$(call report,$@,$<,95)
 	@mkdir -p $(shell dirname $@)
-	$(CC) $(CCFLAGS) -c -fPIC -I./inc -I./lib -o $@ $<
-	@printf "$E0m"
+	$(eval CMD:=$(CC) $(CFLAGS) -I./inc -I./lib -o $@ $<)
+	@$(call report,$@,$<,95,$(CMD))
+	@$(CMD);
 
 # Complie Library Sources to Objects
 $(BUILD)/lib/%.o: lib/%.c $(LIB_INCS) $(BUILD)/env
-	$(call report,$@,$<,95)
 	@mkdir -p $(shell dirname $@)
-	$(CC) $(CCFLAGS) -c -fPIC -I./lib -o $@ $<
-	@printf "$E0m"
+	$(eval CMD:=$(CC) $(CFLAGS) -I./lib -o $@ $<)
+	@$(call report,$@,$<,95,$(CMD))
+	@$(CMD);
 
 # Link Executables
 $(BUILD)/%: $(BUILD)/src/%.o $(LIB_OBJS) $(OBJS)
-	$(call report,$@,$<,94)
-	${LD} $(LDFLAGS) -o $@ $^
-	@printf "$E0m"; chmod +x $@
-
+	$(eval CMD:=${LD} $(LDFLAGS) -o $@ $^)
+	@$(call report,$@,$<,94,$(CMD))
+	@$(CMD);
+	@chmod +x $@
+# Thread safe report (-j compatible)
 define report
-@echo "$E0;1;4;$3m$(notdir $1)$E0;$3m <- $2$E0;90m"
+echo "$E0;1;4;$3m$(notdir $1)$E0;$3m <- $2\n$E0;90m$(CMD)$E0m"
 endef
 
 include scripts/*.mk

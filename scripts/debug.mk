@@ -1,8 +1,8 @@
-# Debug mode: outputs to $(BUILD)/debug, add DEBUG to CCFLAGS
+# Debug mode: outputs to $(BUILD)/debug, add DEBUG to CFLAGS
 debug: debug.env all
 
 debug.env:
-	$(eval CCFLAGS += -DDEBUG -g)
+	$(eval CFLAGS += -DDEBUG -g)
 
 # Add specific flag for debug
 %.debug:
@@ -11,6 +11,6 @@ debug.env:
 		sed -e 's/\//_/g' |	\
 		tr 'a-z' 'A-Z'		\
 	))
-	$(eval CCFLAGS += -DDEBUG_$(DBG_T))
+	$(eval CFLAGS += -DDEBUG_$(DBG_T))
 
 .PHONY: debug debug.env %.debug

@@ -13,7 +13,6 @@ test/%.test: tmp/%.out
 	||	echo "$(MSG_FAIL) $(notdir $F) -> $F.diff"
 	@	tput sgr0; rm $<
 
-
 # Dependencies for generating test outputs
 define exec_name
 $(shell echo $(BUILD)/$(notdir $1) | sed -E 's/\.[0-9]+$$//g')
@@ -28,14 +27,17 @@ tmp/%.out: test/%.in tmp
 	||	(echo "$(MSG_ERUN)$(TEST)"; tput sgr0)
 
 # Report performance on all test inputs
-perf: debug $(patsubst %.in,%.perf,$(wildcard test/*.in))
+perf: perf.env $(patsubst %.in,%.perf,$(wildcard test/*.in))
 
+perf.env:
+	$(eval CFLAGS+="-pg")
+	$(eval LDFLAGS+="-pg")
 
 # Run performance test for specific input
-test/%.perf: test/%.in
+test/%.perf: test/%.in perf.env
 	$(eval EXEC:=$(call exec_name,$(@:.perf=)))
 	$(eval FOUT:=$(patsubst $(BUILD)/%,$(BUILD)/src/%.o,$(EXEC)))
-	@$(call env) CCFLAGS="$(CCFLAGS) -p" $(MAKE) $(EXEC)
+	@$(call env) $(MAKE) $(EXEC)
 	# gprof $(EXEC) $(FOUT) < $< 2> /dev/null
 
-.PHONY: test test/%.test perf test/%.perf
+.PHONY: test test/%.test perf perf.env test/%.perf

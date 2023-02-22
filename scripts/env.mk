@@ -1,7 +1,7 @@
 # Function to print all re-configurable env args
 define env
-BUILD="$(BUILD)"		\
-CCFLAGS="$(CCFLAGS)"	\
+BUILD="$(BUILD)"	\
+CFLAGS="$(CFLAGS)"	\
 LDFLAGS="$(LDFLAGS)"
 endef
 
@@ -9,5 +9,5 @@ endef
 $(BUILD)/env: $(BUILD) tmp
 	@	echo '$(call env)'				\
 	|	sed -E "s/\" /\"\n/g" > tmp/env	\
-	&&	diff $@ tmp/env > /dev/null		\
+	&&	cmp -s $@ tmp/env > /dev/null	\
 	||	mv tmp/env $@
