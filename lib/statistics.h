@@ -6,6 +6,8 @@
 #ifndef STATISTICS_H
 #define STATISTICS_H
 
+#include "macros.h"
+
 #ifndef DEBUG_STAT
 #define STAT(ID)
 #define STAT_UPDATE(ID, ...)
@@ -25,16 +27,16 @@ typedef struct _STAT_ {
 	STAT_NAME(ID).total ++;				\
 }
 
-#define STAT_REPORT(ID) fprintf(							\
-	stderr												,	\
-	"Statistics:%s => %6.2f%% (%zu hits, %zu total)\n"	,	\
-	#ID													,	\
-	STAT_NAME(ID).total										\
-		? 100 * ((float)STAT_NAME(ID).hit_count) /			\
-		  ((float)STAT_NAME(ID).total)						\
-		: (float)0										,	\
-	STAT_NAME(ID).hit_count								,	\
-	STAT_NAME(ID).total										\
+#define STAT_REPORT(ID) _DEBUG_PRINT(							\
+	"<stat> %s = %6.2f%% (%zu hits, %zu total)"	,	\
+	#ID												,	\
+	STAT_NAME(ID).total									\
+		? 100 * ((float)STAT_NAME(ID).hit_count) /		\
+		  ((float)STAT_NAME(ID).total)					\
+		: (float)0									,	\
+	STAT_NAME(ID).hit_count							,	\
+	STAT_NAME(ID).total								,	\
+	'\n'												\
 )
 #endif
 
