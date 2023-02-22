@@ -33,6 +33,7 @@
 #include "vector.h"
 #include "lock.h"
 #include "macros.h"
+#include "utility.h"
 #include "statistics.h"
 /* ======= local includes ======= */
 #include "micro_op.h"
@@ -133,9 +134,19 @@ int main(int argc, const char *argv[]) {
 	// Redirect stdin if given file path from command line
 	if (argc >= 2) freopen(argv[1], "r", stdin);
 	// Parse optional command line argument
+	getenv("NUM_THREADS");
+	getenv("BUF_SIZE");
 	const size_t
-		n_threads = (size_t)(argc >= 3 ? atoi(argv[2]) : 10),
-		buf_size  = (size_t)(argc >= 4 ? atoi(argv[3]) : 16);
+		n_threads = (size_t)atoi((char *)OPTIONAL(
+			argc > 2 ? argv[2] : NULL,
+			getenv("NUM_THREADS"),
+			"10"
+		)),
+		buf_size  = (size_t)atoi((char *)OPTIONAL(
+			argc > 3 ? argv[3] : NULL,
+			getenv("BUF_SIZE"),
+			"128"
+		));
 	// Check if n_threads > 0
 	ASSERT(n_threads > 0, "number of threads must be greater than 0");
 	// Initialize context

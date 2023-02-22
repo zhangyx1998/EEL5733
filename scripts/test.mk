@@ -1,6 +1,7 @@
 # Run all tests according to input files in test/
-test: $(patsubst %.in,%.test,$(wildcard test/*.in))
-
+test: all
+	@	$(call env) $(MAKE) \
+		$(patsubst %.in,%.test,$(wildcard test/*.in))
 
 # Dependencies for test runs
 MSG_PASS:=$E0;1;92m[PASSING]$E0;90m
