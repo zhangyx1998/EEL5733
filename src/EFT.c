@@ -52,7 +52,7 @@ void *producer(Context ctx) {
 			SWMR_unlock(ctx->account_vec_lock);
 		} else if (inst->type == INS_TRANSFER) {
 			if (inst->account_src == inst->account_dst) {
-				DEBUG_PRINT("ignoring transaction to same account <%zu>", inst->account_src);
+				DEBUG_PRINT("ignoring transaction to same account <%u>", inst->account_src);
 				continue;
 			}
 			MacroOp op = macroOp(inst->account_src, inst->account_dst, inst->amount);
