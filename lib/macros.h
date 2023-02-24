@@ -9,6 +9,8 @@
 #include "stdio.h"
 #include "unistd.h"
 #include "ANSI.h"
+// Reports count of __VA_ARGS__
+#define NUM_ARGS(...)  (sizeof((int[]){__VA_ARGS__})/sizeof(int))
 // Calculates required space for current string to print
 #define SPRINTF_SIZE(...) \
 	((1 + snprintf(NULL, 0, __VA_ARGS__)) * sizeof(char))
@@ -57,10 +59,14 @@
 
 #ifdef DEBUG
 #define DEBUG_PRINT(...) _DEBUG_PRINT(__VA_ARGS__, '\n')
+#else
+#define DEBUG_PRINT(...);
+#endif
+
+#ifdef DEBUG_TRACE
 #define TR(F) \
 	(TRACE_COLOR_PRINT(stderr, C_YELLOW, #F"%c", '\n'), F)
 #else
-#define DEBUG_PRINT(...);
 #define TR(F) F
 #endif
 

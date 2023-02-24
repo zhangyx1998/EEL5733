@@ -17,11 +17,11 @@ static const char OPTION_END;
 #define OPTIONAL(...) _util_optional_(0, __VA_ARGS__, OPTION_TRAP)
 
 void *_util_optional_(int l, ...) {
-	va_list valist;
+	va_list va;
 	void *opt = NULL;
-	va_start(valist, l);
-	while ((opt = va_arg(valist, void *)) == NULL);
-	va_end(valist);
+	va_start(va, l);
+	while ((opt = va_arg(va, void *)) == NULL);
+	va_end(va);
 	if (opt != OPTION_TRAP)
 		return opt;
 	else {

@@ -21,9 +21,9 @@ typedef struct Context {
 } * Context;
 
 
-Context context(size_t stream_size) {
+Context context() {
 	Context c = malloc(sizeof(*c));
-	c->inst_stream = stream(stream_size);
+	c->inst_stream = stream();
 	c->account_vec = vector();
 	c->account_vec_lock = create_SWMR_lock();
 	return c;

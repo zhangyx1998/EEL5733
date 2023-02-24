@@ -4,10 +4,49 @@
  * @brief Lock implementations
  */
 #include "stdlib.h"
+#include "stdarg.h"
 #include "pthread.h"
-#include "lock.h"
+#include "vector.h"
 #include "macros.h"
+#include "lock.h"
 
+/* ================ Mutex Lock Extension ================ */
+int _pthread_mutex_trylock_all_(size_t n, ...) {
+	// Initialize return code
+	int return_code = 0;
+	// Initialize vector list
+	VectorElement el;
+	va_list va;
+	Vector vec = vector();
+	// Capture vector list
+	va_start(va, n);
+	while ((el = va_arg(va, void *)) != NULL) vector_push(vec, el);
+	va_end(va);
+	// Try to lock each mutex in va_list
+	for (size_t i = 0; i < vector_len(vec); i ++) {
+		pthread_mutex_t * mutex = (pthread_mutex_t *)vector_get(vec, i);
+		if (pthread_mutex_trylock(mutex) != 0) {
+			LIB_LOCK_DEBUG_PRINT(
+				"[%p] already locked (%zu), aborting",
+				vector_get(vec, i), i
+			);
+			// Release all previously acquired locks
+			for (size_t j = 0; j < i; j++)
+				MUTEX_UNLOCK((pthread_mutex_t *)vector_get(vec, j));
+			// Set non-zero return code
+			return_code = (i + 1) ? (i + 1) : 1;
+			// break out of loop
+			break;
+		} else {
+			LIB_LOCK_DEBUG_PRINT(
+				"[%p] locked (%zu)",
+				vector_get(vec, i), i
+			);
+		}
+	}
+	_vector(vec);
+	return return_code;
+}
 /* ================ Producer-Consumer Lock Model ================ */
 PC_Lock create_PC_lock() {
 	PC_Lock l = malloc(sizeof(*l));
@@ -67,16 +106,12 @@ void destroy_SWMR_lock(SWMR_Lock lock) {
 	free(l);
 }
 
-#ifdef DEBUG_LIB_LOCK
 #define REPORT_SWMR_LOCK_STATE(L) 	\
-	DEBUG_PRINT(					\
+	LIB_LOCK_DEBUG_PRINT(			\
 		"[%c] (%u refs)",			\
 		(char)(L)->state,			\
 		(L)->ref_count				\
 	)
-#else
-#define REPORT_SWMR_LOCK_STATE(L)
-#endif
 
 void SWMR_lock(SWMR_Lock lock, const LOCK_ACCESS_TYPE t) {
 	const _SWMR_Lock_ l = (_SWMR_Lock_)lock;

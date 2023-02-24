@@ -36,7 +36,7 @@
 #include "utility.h"
 #include "statistics.h"
 /* ======= local includes ======= */
-#include "micro_op.h"
+#include "macro_op.h"
 #include "account.h"
 #include "context.h"
 #include "parser.h"
@@ -51,14 +51,8 @@ void *producer(Context ctx) {
 			vector_push(ctx->account_vec, account(inst->account_src, inst->amount));
 			SWMR_unlock(ctx->account_vec_lock);
 		} else if (inst->type == INS_TRANSFER) {
-			stream_write(
-				ctx->inst_stream,
-				(StreamElement)microOp(OP_SEND, inst->account_src, inst->amount)
-			);
-			stream_write(
-				ctx->inst_stream,
-				(StreamElement)microOp(OP_RECV, inst->account_dst, inst->amount)
-			);
+			MacroOp op = macroOp(inst->account_src, inst->account_dst, inst->amount);
+			stream_write(ctx->inst_stream, (StreamElement)op);
 		} else {
 			DEBUG_PRINT("got instruction [%p] with unknown type", (void *)inst);
 		}
@@ -89,39 +83,32 @@ void *worker(void * context) {
 	STAT(consumer_hit);
 	DEBUG_PRINT("initiated");
 	const Context ctx = context;
-	MicroOp op;
-	while ((op = (MicroOp)stream_read(ctx->inst_stream)) != (MicroOp)END_OF_STREAM) {
+	MacroOp op;
+	while ((op = (MacroOp)stream_read(ctx->inst_stream)) != (MacroOp)END_OF_STREAM) {
 		SWMR_lock(ctx->account_vec_lock, LOCK_RD);
-		Account a = getAccount(ctx, op->id); {
-			// Acquire lock for this account
-			if (pthread_mutex_trylock(a->mutex) == 0) {
-				STAT_UPDATE(consumer_hit, 1);
-				// Do the transfer
-				switch (op->type) {
-					case OP_RECV:
-						DEBUG_PRINT(
-							"account<%u> +%lu (balance %ld)",
-							op->id, op->amount, a->balance
-						);
-						a->balance += op->amount;
-						break;
-					case OP_SEND:
-						DEBUG_PRINT(
-							"account<%u> -%lu (balance %ld)",
-							op->id, op->amount, a->balance
-						);
-						a->balance -= op->amount;
-						break;
-					default:
-						EPRINT("unknown operation %d", (int)op->type);
-				}
-				free(op);
-				MUTEX_UNLOCK(a->mutex);
-			} else {
-				STAT_UPDATE(consumer_hit, 0);
-				// Push micro operation back to stream
-				stream_write(ctx->inst_stream, (StreamElement)op);
-			}
+		if (op->src == op->dst) continue;
+		Account a = getAccount(ctx, op->src), b = getAccount(ctx, op->dst);
+		// Acquire lock for this account
+		if (MUTEX_TRYLOCK_ALL(a->mutex, b->mutex) == 0) {
+			STAT_UPDATE(consumer_hit, 1);
+			// Do the transfer
+			DEBUG_PRINT(
+				"\n\t" "account<%u> -%lu (balance %ld before transfer)"
+				"\n\t" "account<%u> +%lu (balance %ld before transfer)",
+				op->src, op->amount, a->balance,
+				op->dst, op->amount, b->balance
+			);
+			a->balance -= op->amount;
+			b->balance += op->amount;
+			// Free operation pointer
+			TR(free)(op);
+			// Release all locks
+			MUTEX_UNLOCK(a->mutex);
+			MUTEX_UNLOCK(b->mutex);
+		} else {
+			STAT_UPDATE(consumer_hit, 0);
+			// Push micro operation back to stream
+			TR(stream_write)(ctx->inst_stream, (StreamElement)op);
 		}
 		SWMR_unlock(ctx->account_vec_lock);
 	}
@@ -134,23 +121,16 @@ int main(int argc, const char *argv[]) {
 	// Redirect stdin if given file path from command line
 	if (argc >= 2) freopen(argv[1], "r", stdin);
 	// Parse optional command line argument
-	getenv("NUM_THREADS");
-	getenv("BUF_SIZE");
 	const size_t
 		n_threads = (size_t)atoi((char *)OPTIONAL(
 			argc > 2 ? argv[2] : NULL,
 			getenv("NUM_THREADS"),
 			"10"
-		)),
-		buf_size  = (size_t)atoi((char *)OPTIONAL(
-			argc > 3 ? argv[3] : NULL,
-			getenv("BUF_SIZE"),
-			"128"
 		));
 	// Check if n_threads > 0
 	ASSERT(n_threads > 0, "number of threads must be greater than 0");
 	// Initialize context
-	Context ctx = context(buf_size);
+	Context ctx = context();
 	// Launch execution workers
 	pthread_t *tid = malloc(n_threads * sizeof(*tid));
 	for (size_t i = 0; i < n_threads; i++)

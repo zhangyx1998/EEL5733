@@ -4,6 +4,7 @@ test: all
 		$(patsubst %.in,%.test,$(wildcard test/*.in))
 
 # Dependencies for test runs
+MSG_TEST:=$E0;1;93m[RUNNING]$E0;90m
 MSG_PASS:=$E0;1;92m[PASSING]$E0;90m
 MSG_FAIL:=$E0;1;91m[FAILING]$E0;90m
 define TIME
@@ -15,7 +16,8 @@ endef
 # Run test on specific input
 test/%.test: tmp/%.out
 	$(eval F:=$(@:.test=))
-	@	diff -u $F.out $< > $F.diff && rm $F.diff			\
+	@	stdbuf -o0 printf "$Es$(MSG_TEST) $(notdir $F)$Eu";
+	@	diff -u $F.out $< > $F.diff && rm $F.diff				\
 	&&	echo "$(MSG_PASS) $(notdir $F) $(call TIME,$<)$E0m"	\
 	||	echo "$(MSG_FAIL) $(notdir $F) -> $F.diff$E0m"
 	@	rm $<

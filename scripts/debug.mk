@@ -12,5 +12,6 @@ debug.env:
 		tr 'a-z' 'A-Z'		\
 	))
 	$(eval CFLAGS += -DDEBUG_$(DBG_T))
+	@echo > /dev/null
 
 .PHONY: debug debug.env %.debug

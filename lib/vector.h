@@ -8,7 +8,7 @@
 
 #include "stdlib.h"
 
-#define VECTOR_CHUNK_SIZE 16
+#define VECTOR_CHUNK_SIZE 128
 
 typedef void * Vector;
 typedef void * VectorElement;

@@ -37,13 +37,11 @@ void *worker(void *p) {
 
 int main(int argc, const char *argv[]) {
 	size_t test_size;
-	scanf("%zd", &test_size);
+	scanf("%zu", &test_size);
 	// Parse optional command line argument
-	const size_t
-		n_threads = (size_t)(argc >= 2 ? atoi(argv[1]) : 10),
-		buf_size  = (size_t)(argc >= 3 ? atoi(argv[2]) : 16);
+	const size_t n_threads = (size_t)(argc >= 2 ? atoi(argv[1]) : 10);
 	// Initialize stream
-	s = stream(buf_size);
+	s = stream();
 	// Launch execution workers
 	pthread_t *tid = malloc(n_threads * sizeof(*tid));
 	for (size_t i = 0; i < n_threads; i++)

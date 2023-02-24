@@ -14,7 +14,7 @@ typedef QueueElement StreamElement;
 
 #define END_OF_STREAM ((StreamElement)EOF)
 
-Stream stream(size_t);
+Stream stream();
 void _stream(Stream);
 
 void stream_write(Stream, StreamElement);
