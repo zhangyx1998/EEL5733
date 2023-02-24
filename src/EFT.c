@@ -51,12 +51,12 @@ void *producer(Context ctx) {
 			vector_push(ctx->account_vec, account(inst->account_src, inst->amount));
 			SWMR_unlock(ctx->account_vec_lock);
 		} else if (inst->type == INS_TRANSFER) {
-			if (inst->account_src == inst->account_dst) {
+			if (inst->account_src != inst->account_dst) {
+				MacroOp op = macroOp(inst->account_src, inst->account_dst, inst->amount);
+				stream_write(ctx->inst_stream, (StreamElement)op);
+			} else {
 				DEBUG_PRINT("ignoring transaction to same account <%u>", inst->account_src);
-				continue;
 			}
-			MacroOp op = macroOp(inst->account_src, inst->account_dst, inst->amount);
-			stream_write(ctx->inst_stream, (StreamElement)op);
 		} else {
 			DEBUG_PRINT("got instruction [%p] with unknown type", (void *)inst);
 		}
