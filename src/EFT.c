@@ -85,8 +85,8 @@ void *worker(void * context) {
 	const Context ctx = context;
 	MacroOp op;
 	while ((op = (MacroOp)stream_read(ctx->inst_stream)) != (MacroOp)END_OF_STREAM) {
-		SWMR_lock(ctx->account_vec_lock, LOCK_RD);
 		if (op->src == op->dst) continue;
+		SWMR_lock(ctx->account_vec_lock, LOCK_RD);
 		Account a = getAccount(ctx, op->src), b = getAccount(ctx, op->dst);
 		// Acquire lock for this account
 		if (MUTEX_TRYLOCK_ALL(a->mutex, b->mutex) == 0) {
