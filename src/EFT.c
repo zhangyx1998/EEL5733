@@ -51,6 +51,10 @@ void *producer(Context ctx) {
 			vector_push(ctx->account_vec, account(inst->account_src, inst->amount));
 			SWMR_unlock(ctx->account_vec_lock);
 		} else if (inst->type == INS_TRANSFER) {
+			if (inst->account_src == inst->account_dst) {
+				DEBUG_PRINT("ignoring transaction to same account <%zu>", inst->account_src);
+				continue;
+			}
 			MacroOp op = macroOp(inst->account_src, inst->account_dst, inst->amount);
 			stream_write(ctx->inst_stream, (StreamElement)op);
 		} else {
@@ -85,7 +89,6 @@ void *worker(void * context) {
 	const Context ctx = context;
 	MacroOp op;
 	while ((op = (MacroOp)stream_read(ctx->inst_stream)) != (MacroOp)END_OF_STREAM) {
-		if (op->src == op->dst) continue;
 		SWMR_lock(ctx->account_vec_lock, LOCK_RD);
 		Account a = getAccount(ctx, op->src), b = getAccount(ctx, op->dst);
 		// Acquire lock for this account
