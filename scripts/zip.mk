@@ -7,9 +7,6 @@ BRANCH   := $(shell git branch --show-current)
 BRANCH   := $(patsubst assignment_%,Assignment_%,$(BRANCH))
 FILE_LIST:= $(shell git ls-tree --full-tree --name-only -r HEAD)
 ARCHIVE  :=	var/$(AUTHOR)_$(BRANCH).zip
-$(info AUTHOR=$(AUTHOR))
-$(info BRANCH=$(BRANCH))
-$(info ARCHIVE=$(ARCHIVE))
 $(ARCHIVE): var repo_is_clean
 	@rm -f $@
 	@zip $@ $(FILE_LIST) 1> /dev/null
