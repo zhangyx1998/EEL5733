@@ -1,4 +1,6 @@
 # Creates a zip file for current workspace
+# only in valid git repository
+ifeq ($(shell git status > /dev/null 2>&1; echo $$?),0)
 AUTHOR   := $(shell git config --get user.name || whoami)
 AUTHOR   := $(shell echo $(AUTHOR) | sed -E 's/\W/_/g')
 BRANCH   := $(shell git branch --show-current)
@@ -18,3 +20,4 @@ zip: $(ARCHIVE)
 
 .PRECIOUS: var/$(AUTHOR)_$(BRANCH).zip
 .PHONY: zip
+endif
