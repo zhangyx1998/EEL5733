@@ -9,7 +9,7 @@ CC       := gcc
 LD       := gcc
 CFLAGS   ?= -Wall -c
 ARFLAGS  ?=
-LDFLAGS  ?=
+LDFLAGS  ?= -lpthread
 # Source and header file list
 SRCS     := $(wildcard src/*.c)
 INCS     := $(wildcard inc/*.h)
