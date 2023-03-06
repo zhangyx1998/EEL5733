@@ -1,0 +1,15 @@
+name: Makefile CI
+
+on:
+  push:
+    branches: [ "assignment_4" ]
+  pull_request:
+    branches: [ "assignment_4" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Run test
+      run: make test
