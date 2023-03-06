@@ -1,68 +1,98 @@
+/**
+ * EEL5733 Assignments
+ * @author Yuxuan Zhang (zhangyuxuan@ufl.edu)
+ * @brief Queue implementations
+ */
+#include <sys/mman.h>
+#include <stdlib.h>
+#include <string.h>
 #include "macros.h"
 #include "queue.h"
 
-struct Queue {
-	QueueElement *buffer, *start, *end;
-	size_t capacity;
-	unsigned short empty;
-};
+typedef struct Queue {
+	QueueElement *buffer, *delete_p, *insert_p;
+	size_t capacity, length, element_size;
+} * const _Queue_;
 
-typedef struct Queue Queue;
+#ifdef DEBUG_LIB_QUEUE
+#define REPORT_QUEUE_OPERATION(Q, E)		\
+	DEBUG_PRINT(							\
+		"[%p] range(%zu->%zu) size=%zu",	\
+		(void *)E,							\
+		(size_t)(Q->delete_p - Q->buffer),	\
+		(size_t)(Q->insert_p - Q->buffer),	\
+		Q->length							\
+	)
+#else
+#define REPORT_QUEUE_OPERATION(Q, E)
+#endif
 
-void *create_queue(size_t capacity) {
+Queue create_queue(size_t capacity, size_t element_size) {
 	ASSERT(capacity > 0, "initializing queue with length of 0");
-	Queue * const q = malloc(sizeof(Queue));
-	q->buffer = malloc(capacity * sizeof(*q->buffer));
+	ASSERT(element_size > 0, "initializing queue with element size of 0");
+	size_t total = sizeof(_Queue_) + capacity * element_size;
+	void *space = mmap(NULL, total, PROT_READ | PROT_WRITE, MAP_SHARED, -1, 0);
+#ifdef DEBUG_LIB_QUEUE
+	DEBUG_PRINT(
+		"Initializing queue with capacity %zu, el size %zu, total %zu",
+		capacity, element_size, total
+	);
+	DEBUG_PRINT("MMAP -> %p", space);
+#endif
+	_Queue_ q = space;
+	q->buffer = space + sizeof(_Queue_);
+	q->element_size = element_size;
+	q->delete_p = q->buffer;
+	q->insert_p = q->buffer;
 	q->capacity = capacity;
-	q->start = q->buffer;
-	q->end = q->buffer;
-	q->empty = 1;
-	return (void *)q;
+	q->length = 0;
+	REPORT_QUEUE_OPERATION(q, NULL);
+	return q;
 }
 
-void free_queue(void * const queue) {
-	Queue * const q = queue;
-	free(q->buffer);
-	free(q);
+void destroy_queue(Queue queue) {
+	_Queue_ q = queue;
+	munmap(q, sizeof(*q) + q->capacity * q->element_size);
 }
 
-size_t queue_len(void * const queue) {
-	Queue * const q = queue;
-	if (q->empty)
-		return 0;
-	else if (q->start < q->end)
-		return q->end - q->start;
-	else
-		return q->capacity - (q->start - q->end);
+size_t queue_len(Queue queue) {
+	_Queue_ q = queue;
+	return q->length;
 }
 
-unsigned short queue_empty(void * const queue) {
-	Queue * const q = queue;
-	return q->empty;
+unsigned short queue_empty(Queue queue) {
+	_Queue_ q = queue;
+	return q->length == 0;
 }
 
-unsigned short queue_full(void * const queue) {
-	Queue * const q = queue;
-	return (q->start == q->end) && !q->empty;
+unsigned short queue_full(Queue queue) {
+	_Queue_ q = queue;
+	return q->length == q->capacity;
 }
 
-#define MOVE_NEXT(Q, P) { 					\
-	if (++P >= (Q)->buffer + (Q)->capacity)	\
-		P = (Q)->buffer;					\
+#define QUEUE_PTR_TO_NEXT(Q, P) { 							\
+	if (													\
+		((P) += (Q)->element_size) >=						\
+		((Q)->buffer + (Q)->capacity * (Q)->element_size)	\
+	)														\
+		(P) = (Q)->buffer;									\
 }
 
-void enqueue(void * const queue, const QueueElement c) {
-	Queue * const q = queue;
-	*(q->end) = c;
-	MOVE_NEXT(q, q->end);
-	q->empty = 0;
+void enqueue(Queue queue, const QueueElement e) {
+	_Queue_ q = queue;
+	ASSERT(q->length < q->capacity, "write overflow");
+	memcpy(q->insert_p, e, q->element_size);
+	QUEUE_PTR_TO_NEXT(q, q->insert_p);
+	q->length++;
+	REPORT_QUEUE_OPERATION(q, e);
 }
 
-QueueElement dequeue(void * const queue) {
-	Queue * const q = queue;
-	const QueueElement c = *(q->start);
-	MOVE_NEXT(q, q->start);
-	if (q->start == q->end)
-		q->empty = 1;
-	return c;
+QueueElement dequeue(Queue queue, QueueElement e) {
+	_Queue_ q = queue;
+	ASSERT(q->length > 0, "read overflow");
+	memcpy(e, q->delete_p, q->element_size);
+	QUEUE_PTR_TO_NEXT(q, q->delete_p);
+	q->length--;
+	REPORT_QUEUE_OPERATION(q, e);
+	return e;
 }

@@ -57,66 +57,22 @@ int thread_puts(const char *str) {
 }
 
 ssize_t thread_getline(char **buf, size_t *len) {
-	// Flag to exit for EOF on next call of this function
-	static int flag_EOF = 0;
-	if (flag_EOF) return EOF;
-	// Static chunk pointer to continue scanning unfinished chunk
-	static const char *chunk = NULL, *trim = NULL;
-	// Total size of string stored into buffer
-	size_t total = 0;
-	// Keep capturing until line is complete
-	while (1) {
-		if (chunk != NULL) {
-			// Scan previous chunk and find next line feed
-			size_t step = 0;
-			while (trim[step] != '\n' && trim[step] != '\0') step++;
-			if (trim[step] == '\n') step++;
-			// Fit new content into buffer
-			if (total + step >= *len) {
-				*len = total + step + 1;
-				*buf = realloc(*buf, *len);
-			}
-			memcpy(*buf + total, trim, step);
-			total += step;
-			(*buf)[total] = 0;
-			// Free chunk if finished
-			trim += step;
-			if (*trim == 0) {
-				free((void *)chunk);
-				chunk = NULL;
-			}
-			// Return if buffer ends with line feed
-			if ((*buf)[total - 1] == '\n') {
-				DEBUG_PRINT("\"%.*s\"", (int)(total - 1), *buf);
-				return total;
-			}
-		} else {
-			// Get next string chunk
-			// Acquire lock
-			ASSERT(
-				pthread_mutex_lock(&model.lock) == 0,
-				"unable to acquire lock"
-			);
-			while (queue_empty(queue))
-				pthread_cond_wait(&model.consumer, &model.lock);
-			// Pop from buffer
-			const char *next_chunk = dequeue(queue);
-			// Release the lock and send signal to producer
-			pthread_mutex_unlock(&model.lock);
-			pthread_cond_signal(&model.producer);
-			// Check for EOF
-			if (next_chunk == NULL) {
-				flag_EOF = 1;
-				return total > 0 ? total : EOF;
-			}
-			// Assign next chunk to the static pointer
-			ASSERT(chunk == NULL, "current chunk not set to NULL");
-			chunk = next_chunk;
-			trim = chunk;
-		}
-	}
-	// Trap: control should NEVER reach here
-	ERR_EXIT("control ran into unreachable point");
+	if (*len < 128) *buf = realloc(*buf, *len = 128);
+	// Acquire lock
+	ASSERT(
+		pthread_mutex_lock(&model.lock) == 0,
+		"unable to acquire lock"
+	);
+	while (queue_empty(queue))
+		pthread_cond_wait(&model.consumer, &model.lock);
+	// Pop from buffer
+	dequeue(queue, *buf);
+	size_t l = strlen(*buf);
+	// Release the lock and send signal to producer
+	pthread_mutex_unlock(&model.lock);
+	pthread_cond_signal(&model.producer);
+	// Return result of getline
+	return l > 0 ? l : EOF;
 }
 
 void *producer(void *entry) {
@@ -128,8 +84,8 @@ void *producer(void *entry) {
 	// Enter thread main function
 	DEBUG_PRINT("LAUNCH [%p]", entry);
 	(*(ThreadEntry)entry)(&io);
-	// Send NULL as EOF signal
-	thread_puts(NULL);
+	// Send empty string as EOF
+	thread_puts("");
 	// Report exit in debug mode
 	DEBUG_PRINT("EXIT");
 	// Clean up context before exit
@@ -158,18 +114,23 @@ void *consumer(void *entry) {
 void launch(ThreadEntry producer_entry, ThreadEntry consumer_entry, size_t queue_size) {
 	DEBUG_PRINT("[%p], [%p]", &producer_entry, &consumer_entry);
 	// Thread identifiers
-	pthread_t tid[2];
+	// pthread_t tid[2];
+	int pid[2];
 	// Initialize queue
-	queue = create_queue(queue_size);
+	Queue queue = create_queue(queue_size, 128);
 	// Create the threads; may be any number, in general
-	if (pthread_create(&tid[0], NULL, producer, producer_entry))
-		ERR_EXIT("unable to create producer");
-	if (pthread_create(&tid[1], NULL, consumer, consumer_entry))
-		ERR_EXIT("unable to create consumer");
-	// Wait for created thread to exit
-	pthread_join(tid[0], NULL);
-	pthread_join(tid[1], NULL);
-	DEBUG_PRINT("MAIN THREAD EXIT");
+	if ((pid[0] = fork()) == 0)
+		// Child process 1
+		producer(producer_entry);
+	else if ((pid[1] = fork()) == 0)
+		// Child process 2
+		consumer(consumer_entry);
+	else {
+		// Main process
+		waitpid(pid[0], NULL, 0);
+		waitpid(pid[1], NULL, 0);
+		DEBUG_PRINT("MAIN THREAD EXIT");
+	}
 	// Destroy queue
-	free_queue(queue);
+	destroy_queue(queue);
 }

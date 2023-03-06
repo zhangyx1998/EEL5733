@@ -9,6 +9,9 @@
 #include "tasks.h"
 
 int main(int argc, const char *argv[]) {
+#ifdef DEBUG_REDIRECT
+	freopen("test/location_updater.1.in", "r", stdin);
+#endif
 	size_t thread_buf_size = argc < 2
 		? 10
 		: atoi(argv[1]);

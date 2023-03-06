@@ -1,24 +1,25 @@
 /**
- * EEL5733 Assignment 2
+ * EEL5733 Assignments
  * @author Yuxuan Zhang (zhangyuxuan@ufl.edu)
- * @brief Queue header
+ * @brief Queue Header
  */
 #ifndef QUEUE_H
 #define QUEUE_H
 
 #include "stdlib.h"
 
+typedef void * Queue;
 typedef char * QueueElement;
 
 // Dynamically create queue with given capacity
-void *create_queue(size_t);
-void free_queue(void * const);
+Queue create_queue(size_t, size_t);
+void destroy_queue(Queue);
 
-size_t queue_len(void * const);
-unsigned short queue_empty(void * const);
-unsigned short queue_full(void * const);
+size_t queue_len(Queue);
+unsigned short queue_empty(Queue);
+unsigned short queue_full(Queue);
 
-void enqueue(void * const, const QueueElement);
-QueueElement dequeue(void * const);
+void enqueue(Queue, const QueueElement);
+QueueElement dequeue(Queue, QueueElement);
 
 #endif
