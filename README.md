@@ -2,7 +2,7 @@
 
 ## Notes
 
-This project is based on my previous implementation of assignemnt 2.
+This project is based on my previous implementation of assignment 2.
 The following modifications are made to meet the requirements for assignment 4:
 
 1.	The initialization of `Queue` uses `mmap` instead of `malloc`, making it
