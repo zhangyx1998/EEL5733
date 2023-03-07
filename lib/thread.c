@@ -4,7 +4,8 @@
  * @brief p_thread library wrapper functions 
  */
 #include <pthread.h>
-#include <ctype.h>
+#include <sys/wait.h>
+#include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -12,12 +13,12 @@
 #include "macros.h"
 #include "thread.h"
 #include "queue.h"
+#include "semaphore.h"
 
 // Shared ring-buffer
 Queue queue;
 struct LockModel {
-	pthread_mutex_t lock;
-	pthread_cond_t consumer, producer;
+	sem_t mutex, empty, full;
 } * model;
 
 int thread_puts(const char *str) {
@@ -34,12 +35,8 @@ int thread_puts(const char *str) {
 		chunk[len + 1] = '\0';
 	}
 	// Acquire lock
-	ASSERT(
-		pthread_mutex_lock(&model->lock) == 0,
-		"unable to acquire lock"
-	);
-	while (queue_full(queue))
-		pthread_cond_wait(&model->producer, &model->lock);
+	sem_wait(&model->full);
+	sem_wait(&model->mutex);
 	// Insert into buffer
 	if (chunk != NULL) {
 		DEBUG_PRINT("\"%.*s\"", (int)(strlen(chunk) - 1), chunk);
@@ -47,8 +44,8 @@ int thread_puts(const char *str) {
 	enqueue(queue, chunk);
 	fflush(stdout);
 	// Release the lock and send signal to consumer
-	pthread_mutex_unlock(&model->lock);
-	pthread_cond_signal(&model->consumer);
+	sem_post(&model->mutex);
+	sem_post(&model->empty);
 	// Return 0 indicates success
 	return 0;
 }
@@ -56,19 +53,15 @@ int thread_puts(const char *str) {
 ssize_t thread_getline(char **buf, size_t *len) {
 	if (*len < 128) *buf = realloc(*buf, *len = 128);
 	// Acquire lock
-	ASSERT(
-		pthread_mutex_lock(&model->lock) == 0,
-		"unable to acquire lock"
-	);
-	while (queue_empty(queue))
-		pthread_cond_wait(&model->consumer, &model->lock);
+	sem_wait(&model->empty);
+	sem_wait(&model->mutex);
 	// Pop from buffer
 	dequeue(queue, *buf);
 	size_t l = strlen(*buf);
 	DEBUG_PRINT("(%zu)\n%s", l, *buf);
 	// Release the lock and send signal to producer
-	pthread_mutex_unlock(&model->lock);
-	pthread_cond_signal(&model->producer);
+	sem_post(&model->mutex);
+	sem_post(&model->full);
 	// Return result of getline
 	return l > 0 ? l : EOF;
 }
@@ -112,10 +105,10 @@ void launch(ThreadEntry producer_entry, ThreadEntry consumer_entry, size_t queue
 	// Thread identifiers
 	int pid;
 	// Initialize lock
-	model = mmap(NULL, sizeof(*model), PROT_READ | PROT_WRITE, MAP_ANON | MAP_SHARED, -1, 0);
-	pthread_mutex_init(&model->lock, NULL);
-	pthread_cond_init(&model->consumer, NULL);
-	pthread_cond_init(&model->producer, NULL);
+	model = mmap(NULL, sizeof(*model), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
+	sem_init(&model->mutex, 1, 1);
+	sem_init(&model->empty, 1, 0);
+	sem_init(&model->full, 1, (unsigned int)queue_size);
 	// Initialize queue
 	queue = create_queue(queue_size, 128);
 	// Create the threads; may be any number, in general
