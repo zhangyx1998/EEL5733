@@ -1,5 +1,7 @@
 # EEL5733 Assignment 4
 
+[![Auto Testing](https://github.com/zhangyx1998/EEL5733/actions/workflows/makefile.yml/badge.svg)](https://github.com/zhangyx1998/EEL5733/actions/workflows/makefile.yml)
+
 ## Notes
 
 This project is based on my previous implementation of assignment 2.
