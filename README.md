@@ -2,16 +2,15 @@
 
 ## Notes
 
-I implemented the producer as `thread_puts()`, and the consumer as
-`thread_getline()`. These functions have exactly the same parameter lists and
-return types as the ones found in `stdio.h`.
+This project is based on my previous implementation of assignemnt 2.
+The following modifications are made to meet the requirements for assignment 4:
 
-This type of implementation enables me to drop-in replace the I/O functions
-of my original `email_filter` and `calendar_filter`, with almost no modification
-to their original code.
+1.	The initialization of `Queue` uses `mmap` instead of `malloc`, making it
+	accessible from any process. Please check it out at `lib/queue.c:35`.
 
-Thanks to that, I can direct the I/O of both child threads however I want.
-Please have a look at [](src/email_filter.c) and [](src/calendar_filter.c).
+2.	The lock struct is also initialized on `mmap`ed region instead of `malloc`
+	region. I used `semaphore` instead of `mutex` for race synchronization. You
+	can check it out at `lib/thread.c:108`.
 
 ## Compile & Test
 
