@@ -127,7 +127,7 @@ void launch(ThreadEntry producer_entry, ThreadEntry consumer_entry, size_t queue
 		// Main process
 		producer(producer_entry);
 		// Check for child status
-		int status = 0;
+		int status;
 		waitpid(pid, &status, 0);
 		ASSERT(
 			status == 0,
