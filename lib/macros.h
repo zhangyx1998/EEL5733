@@ -17,7 +17,7 @@
 // Calculates required space and malloc according to space needed
 #define ALLOC_SPRINTF(S, ...) {									\
 	const size_t _ ## S ## _size_ = SPRINTF_SIZE(__VA_ARGS__);	\
-	char *_ ## S ## _ = malloc(_S_);							\
+	char *_ ## S ## _ = malloc(_ ## S ## _size_);				\
 	sprintf(													\
 		_ ## S ## _,											\
 		__VA_ARGS__												\

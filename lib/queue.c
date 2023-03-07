@@ -10,17 +10,17 @@
 #include "queue.h"
 
 typedef struct Queue {
-	QueueElement *buffer, *delete_p, *insert_p;
+	QueueElement buffer, delete_p, insert_p;
 	size_t capacity, length, element_size;
-} * const _Queue_;
+} * _Queue_;
 
 #ifdef DEBUG_LIB_QUEUE
 #define REPORT_QUEUE_OPERATION(Q, E)		\
 	DEBUG_PRINT(							\
 		"[%p] range(%zu->%zu) size=%zu",	\
 		(void *)E,							\
-		(size_t)(Q->delete_p - Q->buffer),	\
-		(size_t)(Q->insert_p - Q->buffer),	\
+		(size_t)((Q->delete_p - Q->buffer) / Q->element_size),	\
+		(size_t)((Q->insert_p - Q->buffer) / Q->element_size),	\
 		Q->length							\
 	)
 #else
@@ -30,8 +30,9 @@ typedef struct Queue {
 Queue create_queue(size_t capacity, size_t element_size) {
 	ASSERT(capacity > 0, "initializing queue with length of 0");
 	ASSERT(element_size > 0, "initializing queue with element size of 0");
-	size_t total = sizeof(_Queue_) + capacity * element_size;
-	void *space = mmap(NULL, total, PROT_READ | PROT_WRITE, MAP_SHARED, -1, 0);
+	_Queue_ q;
+	size_t total = sizeof(*q) + capacity * element_size;
+	void *space = mmap(NULL, total, PROT_READ | PROT_WRITE, MAP_ANON | MAP_SHARED, -1, 0);
 #ifdef DEBUG_LIB_QUEUE
 	DEBUG_PRINT(
 		"Initializing queue with capacity %zu, el size %zu, total %zu",
@@ -39,14 +40,14 @@ Queue create_queue(size_t capacity, size_t element_size) {
 	);
 	DEBUG_PRINT("MMAP -> %p", space);
 #endif
-	_Queue_ q = space;
-	q->buffer = space + sizeof(_Queue_);
+	q = space;
+	q->buffer = space + sizeof(*q);
 	q->element_size = element_size;
 	q->delete_p = q->buffer;
 	q->insert_p = q->buffer;
 	q->capacity = capacity;
 	q->length = 0;
-	REPORT_QUEUE_OPERATION(q, NULL);
+	REPORT_QUEUE_OPERATION(q, q->buffer);
 	return q;
 }
 

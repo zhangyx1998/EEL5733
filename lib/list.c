@@ -54,7 +54,7 @@ int comp(struct Node *a, struct Node *b) {
 void print_node(struct Node * node, unsigned int valid, const struct IO * const io) {
 	char * sbuf = NULL;
 	if (valid) {
-		MALLOC_PRINTF(
+		ALLOC_SPRINTF(
 			sbuf,
 			"%02d/%02d/%04d,%02d:%02d,%.10s",
 			node->date.month,
@@ -65,7 +65,7 @@ void print_node(struct Node * node, unsigned int valid, const struct IO * const 
 			node->loc
 		);
 	} else {
-		MALLOC_PRINTF(
+		ALLOC_SPRINTF(
 			sbuf,
 			"%02d/%02d/%04d,--:--,NA",
 			node->date.month,
