@@ -18,8 +18,8 @@
 // Shared ring-buffer
 Queue queue;
 struct LockModel {
-	sem_t mutex, empty, full;
-} * model;
+	sem_t *mutex, *empty, *full;
+} model;
 
 int thread_puts(const char *str) {
 	char *chunk = NULL;
@@ -35,8 +35,8 @@ int thread_puts(const char *str) {
 		chunk[len + 1] = '\0';
 	}
 	// Acquire lock
-	sem_wait(&model->full);
-	sem_wait(&model->mutex);
+	sem_wait(model.full);
+	sem_wait(model.mutex);
 	// Insert into buffer
 	if (chunk != NULL) {
 		DEBUG_PRINT("\"%.*s\"", (int)(strlen(chunk) - 1), chunk);
@@ -44,8 +44,8 @@ int thread_puts(const char *str) {
 	enqueue(queue, chunk);
 	fflush(stdout);
 	// Release the lock and send signal to consumer
-	sem_post(&model->mutex);
-	sem_post(&model->empty);
+	sem_post(model.mutex);
+	sem_post(model.empty);
 	// Return 0 indicates success
 	return 0;
 }
@@ -53,15 +53,15 @@ int thread_puts(const char *str) {
 ssize_t thread_getline(char **buf, size_t *len) {
 	if (*len < 128) *buf = realloc(*buf, *len = 128);
 	// Acquire lock
-	sem_wait(&model->empty);
-	sem_wait(&model->mutex);
+	sem_wait(model.empty);
+	sem_wait(model.mutex);
 	// Pop from buffer
 	dequeue(queue, *buf);
 	size_t l = strlen(*buf);
 	DEBUG_PRINT("(%zu)\n%s", l, *buf);
 	// Release the lock and send signal to producer
-	sem_post(&model->mutex);
-	sem_post(&model->full);
+	sem_post(model.mutex);
+	sem_post(model.full);
 	// Return result of getline
 	return l > 0 ? l : EOF;
 }
@@ -105,10 +105,26 @@ void launch(ThreadEntry producer_entry, ThreadEntry consumer_entry, size_t queue
 	// Thread identifiers
 	int pid;
 	// Initialize lock
-	model = mmap(NULL, sizeof(*model), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
-	sem_init(&model->mutex, 1, 1);
-	sem_init(&model->empty, 1, 0);
-	sem_init(&model->full, 1, (unsigned int)queue_size);
+#ifdef __MACH__ // MacOS
+	// Support for unnamed semaphore on MacOS was broken,
+	// use named semaphore instead.
+	#define SEM_PREFIX "/location_updater.model."
+	model.mutex = sem_open(SEM_PREFIX"mutex", O_CREAT, 0x777, 1);
+	model.empty = sem_open(SEM_PREFIX"empty", O_CREAT, 0x777, 0);
+	model.full  = sem_open(SEM_PREFIX"full" , O_CREAT, 0x777, queue_size);
+#else // POSIX Generic
+	// Initialize mmap region for semaphores
+	sem_t *s = mmap(
+		NULL, 3 * sizeof(sem_t),
+		PROT_READ | PROT_WRITE,
+		MAP_ANONYMOUS | MAP_SHARED,
+		-1, 0
+	);
+	// Initialize unnamed semaphore
+	sem_init((model.mutex = &s[0]), 1, 1);
+	sem_init((model.empty = &s[1]), 1, 0);
+	sem_init((model.full = &s[2]), 1, queue_size);
+#endif
 	// Initialize queue
 	queue = create_queue(queue_size, 128);
 	// Create the threads; may be any number, in general

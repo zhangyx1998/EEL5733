@@ -8,9 +8,14 @@ The following modifications are made to meet the requirements for assignment 4:
 1.	The initialization of `Queue` uses `mmap` instead of `malloc`, making it
 	accessible from any process. Please check it out at `lib/queue.c:35`.
 
-2.	The lock struct is also initialized on `mmap`ed region instead of `malloc`
+2.	The lock structs are also initialized on `mmap` region instead of `malloc`
 	region. I used `semaphore` instead of `mutex` for race synchronization. You
-	can check it out at `lib/thread.c:108`.
+	can check it out at `lib/thread.c:117`.
+
+> P.S.
+> Support for unnamed semaphore was somehow broken on MacOS. After some
+> researches online, I switched to named semaphore specifically for MacOS.
+> [reference](https://stackoverflow.com/questions/1413785/sem-init-on-os-x)
 
 ## Compile & Test
 
