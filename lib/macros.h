@@ -6,8 +6,9 @@
 #ifndef MACROS_H
 #define MACROS_H
 
-#include "stdio.h"
-#include "unistd.h"
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
 #include "ANSI.h"
 // Reports count of __VA_ARGS__
 #define NUM_ARGS(...)  (sizeof((int[]){__VA_ARGS__})/sizeof(int))
@@ -31,9 +32,15 @@
 	"%s:%d->%s"" "T,						\
 	__FILE__, __LINE__, __FUNCTION__
 
+#ifdef DEBUG_FORK
+#define COLOR_TRACE(T)						\
+	S_DIM("(%d) %s:%d "S_UNDERLINE("%s"))" "T,	\
+	getpid(), __FILE__, __LINE__, __FUNCTION__
+#else
 #define COLOR_TRACE(T)						\
 	S_DIM("%s:%d "S_UNDERLINE("%s"))" "T,	\
 	__FILE__, __LINE__, __FUNCTION__
+#endif
 
 #define TRACE_COLOR_PRINT(F, C, T, ...) (	\
 	isatty(fileno(F))						\

@@ -85,12 +85,10 @@ void producer(ThreadEntry entry) {
 	// Send empty string as EOF
 	thread_puts("");
 	// Report exit in debug mode
-	DEBUG_PRINT("EXIT");
+	DEBUG_PRINT("PRODUCER EXIT");
 	// Clean up context before exit
 	fflush(stdout);
 	fflush(stderr);
-	// Exit Process
-	exit(0);
 }
 
 void consumer(ThreadEntry entry) {
@@ -103,18 +101,16 @@ void consumer(ThreadEntry entry) {
 	DEBUG_PRINT("LAUNCH [%p]", entry);
 	entry(&io);
 	// Report exit in debug mode
-	DEBUG_PRINT("EXIT");
+	DEBUG_PRINT("CONSUMER EXIT");
 	// Clean up context before exit
 	fflush(stdout);
 	fflush(stderr);
-	// Exit Process
-	exit(0);
 }
 
 void launch(ThreadEntry producer_entry, ThreadEntry consumer_entry, size_t queue_size) {
 	DEBUG_PRINT("[%p], [%p]", &producer_entry, &consumer_entry);
 	// Thread identifiers
-	int pid[2];
+	int pid;
 	// Initialize lock
 	model = mmap(NULL, sizeof(*model), PROT_READ | PROT_WRITE, MAP_ANON | MAP_SHARED, -1, 0);
 	pthread_mutex_init(&model->lock, NULL);
@@ -123,24 +119,21 @@ void launch(ThreadEntry producer_entry, ThreadEntry consumer_entry, size_t queue
 	// Initialize queue
 	queue = create_queue(queue_size, 128);
 	// Create the threads; may be any number, in general
-	if ((pid[0] = fork()) == 0) {
+	if ((pid = fork()) == 0) {
 		// Child process 1
-		DEBUG_PRINT("PID %d", getpid());
-		producer(producer_entry);
-	} else if ((pid[1] = fork()) == 0) {
-		// Child process 2
-		DEBUG_PRINT("PID %d", getpid());
 		consumer(consumer_entry);
+		exit(0);
 	} else {
 		// Main process
-		DEBUG_PRINT("PID %d %d | %d", pid[0], pid[1], getpid());
+		producer(producer_entry);
+		// Check for child status
 		int status = 0;
-		waitpid(pid[0], &status, 0);
-		ASSERT(status == 0, "Process 0 exited with error code %d", status);
-		waitpid(pid[1], &status, 0);
-		ASSERT(status == 0, "Process 1 exited with error code %d", status);
+		waitpid(pid, &status, 0);
+		ASSERT(
+			status == 0,
+			"Process %d exited with code %d", pid, status
+		);
 		destroy_queue(queue);
-		DEBUG_PRINT("MAIN THREAD EXIT");
+		DEBUG_PRINT("MAIN PROCESS EXIT");
 	}
-	// Destroy queue
 }
