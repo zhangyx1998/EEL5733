@@ -1,5 +1,5 @@
 /**
- * EEL5733 Assignment 2
+ * EEL5733 Assignments
  * @author Yuxuan Zhang (zhangyuxuan@ufl.edu)
  * @brief List headers
  */
