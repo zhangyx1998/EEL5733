@@ -1,3 +1,4 @@
+TEST_ARGS?=
 # Run all tests according to input files in test/
 test: all
 	@	$(call env) $(MAKE) \
@@ -28,7 +29,7 @@ MSG_ERUN:=$E0;1;91mRuntime Error: $E0;90m
 # Generate outputs using corresponding inputs
 tmp/%.out: test/%.in $(call exec_name,$(@:.out=)) tmp
 	$(eval EXEC:=$(call exec_name,$(@:.out=)))
-	$(eval TEST:=$(EXEC) < $< 1> $@)
+	$(eval TEST:=$(EXEC) $(TEST_ARGS) < $< 1> $@)
 	@	$(call env) $(MAKE) $(EXEC)
 	@	env time -p -o $(@:.out=.time) $(TEST) \
 	||	(echo "$(MSG_ERUN)$(TEST)"; tput sgr0)

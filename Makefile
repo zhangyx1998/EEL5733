@@ -7,8 +7,8 @@ BUILD    ?= build
 MAKE     := make --no-print-directory
 CC       := gcc
 LD       := gcc
-CFLAGS   ?= -Wall -c
-ARFLAGS  ?=
+CFLAGS   ?=
+CFLAGS   := $(CFLAGS) -Wall -c
 LDFLAGS  ?= -lpthread -pthread
 # Source and header file list
 SRCS     := $(wildcard src/*.c)
