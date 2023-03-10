@@ -10,11 +10,14 @@ The following modifications are made to meet the requirements for assignment 4:
 1.	The initialization of `Queue` uses `mmap` instead of `malloc`, making it
 	accessible from any process. Please check it out at `lib/queue.c:35`.
 
-2.	The lock structs are also initialized on `mmap` region instead of `malloc`
-	region. I used `semaphore` instead of `mutex` for race synchronization. You
-	can check it out at `lib/thread.c:117`.
+2.	The lock variables are also initialized in `mmap` region instead of data
+	section.
+	Both `mutex` and `semaphore` implementations are done in this submission,
+	the default lock is _Unnamed Semaphore_ on Linux, and _Named Semaphore_ on
+	MacOS. You can switch to `mutex` by running the following command:\
+	`make use_mutex.debug all`
 
-> P.S.
+> P.S.\
 > Support for unnamed semaphore was somehow broken on MacOS. After some
 > researches online, I switched to named semaphore specifically for MacOS.
 > [reference](https://stackoverflow.com/questions/1413785/sem-init-on-os-x)
