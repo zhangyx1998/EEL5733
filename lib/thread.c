@@ -143,6 +143,14 @@ void launch(ThreadEntry producer_entry, ThreadEntry consumer_entry, size_t queue
 	model.signal = (pthread_cond_t *)(model.mutex + 1);
 	pthread_mutex_init(model.mutex, NULL);
 	pthread_cond_init(model.signal, NULL);
+	ASSERT(
+		pthread_mutexattr_setpshared(model.mutex, PTHREAD_PROCESS_SHARED) == 0,
+		"failed to set pthread_mutexattr_setpshared"
+	);
+	ASSERT(
+		pthread_condattr_setpshared(model.signal, PTHREAD_PROCESS_SHARED) == 0,
+		"failed to set pthread_condattr_setpshared"
+	);
 #elif defined __MACH__ // MacOS
 	DEBUG_PRINT("#### USING NAMED SEMAPHORES ####");
 	// Support for unnamed semaphore on MacOS was broken,
