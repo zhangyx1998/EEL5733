@@ -1,7 +1,7 @@
 ARCH       ?= $(shell uname -m)
 BRANCH     ?= $(shell git branch --show-current)
-IMG_SIZE   := 10G
-VM_MEM     := 2G
+IMG_SIZE   ?= 10G
+VM_MEM     ?= 2G
 QEMU_ARGS  := -m $(VM_MEM) -nographic
 ifeq ($(ARCH),arm64)
 $(info Using architecture aarch64, a.k.a arm64)
