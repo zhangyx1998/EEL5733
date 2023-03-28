@@ -4,7 +4,7 @@ IMG_SIZE   ?= 10G
 VM_MEM     ?= 2G
 QEMU_ARGS  := -m $(VM_MEM) -nographic
 ifeq ($(ARCH),arm64)
-$(info Using architecture aarch64, a.k.a arm64)
+# $(info Using architecture aarch64, a.k.a arm64)
 QEMU       := qemu-system-aarch64
 VM_DISK    := var/$(BRANCH).aarch64.qcow2
 VM_BIOS    := var/QEMU_EFI.fd
@@ -17,7 +17,7 @@ QEMU_ARGS  += -device virtio-blk-device,drive=hd0
 QEMU_ARGS  += -netdev vmnet-shared,id=net0
 QEMU_ARGS  += -device virtio-net,netdev=net0
 else ifeq ($(ARCH),x86_64)
-$(info Using architecture x86_64, a.k.a amd64)
+# $(info Using architecture x86_64, a.k.a amd64)
 QEMU       := qemu-system-x86_64
 VM_DISK    := var/$(BRANCH).x86_64.qcow2
 VM_IMAGE   := var/ubuntu.x86_64.iso

@@ -4,7 +4,8 @@
 # Env related settings
 BUILD    ?= build
 # Compiler Parameters
-MAKE     := make --no-print-directory
+MAKE     ?= make
+MAKE     += --no-print-directory
 CC       := gcc
 LD       := gcc
 CFLAGS   ?=
