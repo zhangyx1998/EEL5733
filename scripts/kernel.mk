@@ -49,12 +49,12 @@ install-kernel-modules: kernel-objects $(patsubst %,%.insmod,$(KERNEL_MODULES))
 remove-kernel-modules: $(patsubst %,%.rmmod,$(KERNEL_MODULES))
 
 KM ?= tuxdev
-tux0: install-kernel-modules
+tux0: remove-kernel-modules install-kernel-modules
 	@if test -e /dev/tux0; then \
 		sudo rm /dev/tux0; \
 		echo "Existing node removed"; \
 	fi
-	@sudo mknod /dev/tux0 c 700 0; echo "Created device node /dev/tux0"
+	@sudo mknod /dev/tux0 c 500 0; echo "Created device node /dev/tux0"
 
 check-kernel-modules:
 	@for km in $(KERNEL_MODULES); do \

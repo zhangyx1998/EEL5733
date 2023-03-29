@@ -34,7 +34,7 @@ static char *ramdisk;
 
 static dev_t first;
 static unsigned int count = 1;
-static int my_major = 700, my_minor = 0;
+static int my_major = 500, my_minor = 0;
 static struct cdev *my_cdev;
 
 static int mycdrv_open(struct inode *inode, struct file *file)
